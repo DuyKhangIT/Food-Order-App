@@ -35,7 +35,6 @@ class _SignInFormState extends State<SignInForm> {
 
   /// call api login
   Future<LoginResponse> loginApi(LoginRequest loginRequest) async {
-    Navigator.pushNamedAndRemoveUntil(context, HomePage.routeName, (Route<dynamic> route) => false);
     setState(() {
       isLoading = true;
       if (isLoading) {
@@ -48,10 +47,11 @@ class _SignInFormState extends State<SignInForm> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/user/login"),
-          RequestType.post,
-          headers: null,
-          body: const JsonEncoder().convert(loginRequest.toBodyRequest()));
+        Uri.parse("http://10.0.2.2:5000/api/auth/login"),
+        RequestType.post,
+        headers: null,
+        body: const JsonEncoder().convert(loginRequest.toBodyRequest()),
+      );
     } catch (error) {
       debugPrint("Fail to login $error");
       rethrow;
@@ -87,9 +87,8 @@ class _SignInFormState extends State<SignInForm> {
                 loginResponse.dataResponseLogin!.token);
             ConfigSharedPreferences().setStringValue(
                 SharedData.USERNAME.toString(),
-                loginResponse.dataResponseLogin!.userResponse!.username);
-            ConfigSharedPreferences().setStringValue(
-                SharedData.ID.toString(),
+                loginResponse.dataResponseLogin!.userResponse!.email);
+            ConfigSharedPreferences().setStringValue(SharedData.ID.toString(),
                 loginResponse.dataResponseLogin!.userResponse!.id);
           });
           Navigator.of(context).pop();
@@ -101,7 +100,8 @@ class _SignInFormState extends State<SignInForm> {
               backgroundColor: Colors.green,
               textColor: Colors.white,
               fontSize: 16);
-          Navigator.pushNamedAndRemoveUntil(context, HomePage.routeName, (Route<dynamic> route) => false);
+          Navigator.pushNamedAndRemoveUntil(
+              context, HomePage.routeName, (Route<dynamic> route) => false);
         }
       });
     }
@@ -118,19 +118,23 @@ class _SignInFormState extends State<SignInForm> {
           Container(
             width: MediaQuery.of(context).size.width,
             padding: const EdgeInsets.all(8),
-            margin: const EdgeInsets.only(top: 30),
+            margin: const EdgeInsets.only(top: 20),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('Food Now',
-                    style: TextStyle(
-                        fontSize: 32,
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold)),
                 Text(
-                    'Sign in with email and password \nor continue with social media',
-                    style: TextStyle(color: Colors.green),
-                    textAlign: TextAlign.center)
+                  'Food Now',
+                  style: TextStyle(
+                    fontSize: 32,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Sign in with email and password \nor continue with social media',
+                  style: TextStyle(color: Colors.green),
+                  textAlign: TextAlign.center,
+                )
               ],
             ),
           ),
@@ -154,18 +158,19 @@ class _SignInFormState extends State<SignInForm> {
                     keyboardType: TextInputType.emailAddress,
                     cursorColor: Colors.grey,
                     decoration: const InputDecoration(
-                        hintText: 'User Name',
-                        hintStyle: TextStyle(
-                          fontFamily: 'NunitoSans',
-                          fontStyle: FontStyle.normal,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14,
-                        ),
-                        border: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        counterText: '',
-                        prefixIcon: Icon(Icons.email_outlined)),
+                      hintText: 'User Name',
+                      hintStyle: TextStyle(
+                        fontFamily: 'NunitoSans',
+                        fontStyle: FontStyle.normal,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 14,
+                      ),
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      counterText: '',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
                     onChanged: (value) {
                       setState(() {
                         username = value;
@@ -214,14 +219,15 @@ class _SignInFormState extends State<SignInForm> {
                           });
                         },
                         child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: (isShowPassword == true)
-                                ? const Icon(Icons.visibility,
-                                    color: Colors.green)
-                                : const Icon(
-                                    Icons.visibility_off,
-                                    color: Colors.green,
-                                  )),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: (isShowPassword == true)
+                              ? const Icon(Icons.visibility,
+                                  color: Colors.green)
+                              : const Icon(
+                                  Icons.visibility_off,
+                                  color: Colors.green,
+                                ),
+                        ),
                       ),
                     ),
                     onChanged: (value) {
@@ -230,11 +236,12 @@ class _SignInFormState extends State<SignInForm> {
                       });
                     },
                     style: const TextStyle(
-                        color: Colors.black,
-                        fontFamily: 'NunitoSans',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        height: 1.9),
+                      color: Colors.black,
+                      fontFamily: 'NunitoSans',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      height: 1.9,
+                    ),
                   ),
                 ),
 
@@ -247,41 +254,45 @@ class _SignInFormState extends State<SignInForm> {
                   color: Colors.green,
                   child: InkWell(
                     onTap: () {
-                      if(Global.isAvailableToClick()){
+                      if (Global.isAvailableToClick()) {
                         LoginRequest loginRequest = LoginRequest(
                             usernameController.text, passwordController.text);
-                        if (loginRequest.userName.isNotEmpty &&
+                        if (loginRequest.email.isNotEmpty &&
                             loginRequest.password.isNotEmpty) {
-                          if(Global().checkEmailAddress(loginRequest.userName) == true){
+                          if (Global().checkEmailAddress(loginRequest.email) ==
+                              true) {
                             loginApi(loginRequest);
-                          }else{
+                          } else {
                             Fluttertoast.showToast(
-                                msg: "Invalid email.Please try again!!",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                timeInSecForIosWeb: 3,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                                fontSize: 16);
-                          }
-                        } else {
-                          Fluttertoast.showToast(
-                              msg: "Please enter username and password!!",
+                              msg: "Invalid email.Please try again!!",
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.BOTTOM,
                               timeInSecForIosWeb: 3,
-                              backgroundColor: Colors.orange,
+                              backgroundColor: Colors.red,
                               textColor: Colors.white,
-                              fontSize: 16);
+                              fontSize: 16,
+                            );
+                          }
+                        } else {
+                          Fluttertoast.showToast(
+                            msg: "Please enter username and password!!",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            timeInSecForIosWeb: 3,
+                            backgroundColor: Colors.orange,
+                            textColor: Colors.white,
+                            fontSize: 16,
+                          );
                         }
                       }
                     },
                     child: const Text(
                       'Continue',
                       style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -294,31 +305,40 @@ class _SignInFormState extends State<SignInForm> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                          height: 40,
-                          width: 40,
-                          padding: const EdgeInsets.all(10),
-                          margin: const EdgeInsets.all(15),
-                          decoration: const BoxDecoration(
-                              color: Color(0xFFF5F6F9), shape: BoxShape.circle),
-                          child: const Icon(
-                            Icons.facebook_outlined,
-                            color: Colors.blue,
-                          )),
+                        height: 40,
+                        width: 40,
+                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.all(15),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F6F9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.facebook_outlined,
+                          color: Colors.blue,
+                        ),
+                      ),
                       Container(
-                          height: 40,
-                          width: 40,
-                          padding: const EdgeInsets.all(10),
-                          margin: const EdgeInsets.only(right: 15),
-                          decoration: const BoxDecoration(
-                              color: Color(0xFFF5F6F9), shape: BoxShape.circle),
-                          child: Image.asset(ImageAssets.icGoogle)),
+                        height: 40,
+                        width: 40,
+                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.only(right: 15),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F6F9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Image.asset(ImageAssets.icGoogle),
+                      ),
                       Container(
-                          height: 40,
-                          width: 40,
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                              color: Color(0xFFF5F6F9), shape: BoxShape.circle),
-                          child: Image.asset(ImageAssets.icTwitter))
+                        height: 40,
+                        width: 40,
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F6F9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Image.asset(ImageAssets.icTwitter),
+                      )
                     ],
                   ),
                 ),
@@ -328,7 +348,10 @@ class _SignInFormState extends State<SignInForm> {
                   children: [
                     const Text(
                       'Dont have an account?',
-                      style: TextStyle(color: Colors.green, fontSize: 14),
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
@@ -336,12 +359,16 @@ class _SignInFormState extends State<SignInForm> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const SignUpPage()),
+                            builder: (context) => const SignUpPage(),
+                          ),
                         );
                       },
                       child: const Text(
                         "Sign up",
-                        style: TextStyle(color: Colors.redAccent, fontSize: 14),
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ],

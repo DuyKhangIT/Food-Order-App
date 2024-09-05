@@ -1,11 +1,11 @@
 class LoginRequest {
-  String userName;
+  String email;
   String password;
 
-  LoginRequest(this.userName, this.password);
+  LoginRequest(this.email, this.password);
 
   Map<String, dynamic> toBodyRequest() => {
-    'username': userName,
+    'email': email,
     'password': password,
   };
 }

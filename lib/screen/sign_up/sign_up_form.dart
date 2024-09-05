@@ -43,7 +43,7 @@ class _SignUpFormState extends State<SignUpForm> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/user/register"),
+          Uri.parse("http://10.0.2.2:5000/api/auth/register"),
           RequestType.post,
           headers: null,
           body: const JsonEncoder().convert(registerRequest.toBodyRequest()));

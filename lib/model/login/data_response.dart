@@ -11,7 +11,7 @@ class DataResponseLogin {
   DataResponseLogin.buildDefault();
   factory DataResponseLogin.fromJson(Map<String, dynamic> json) {
     return DataResponseLogin(
-      json['jwt'],
+      json['token'],
       (json['user'] != null) ? UserResponse.fromJson(json['user']) : null,
     );
   }

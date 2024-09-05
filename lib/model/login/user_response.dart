@@ -1,13 +1,13 @@
 class UserResponse {
   String id = "";
-  String username = "";
+  String email = "";
 
-  UserResponse(this.id, this.username);
+  UserResponse(this.id, this.email);
   UserResponse.buildDefault();
   factory UserResponse.fromJson(Map<String, dynamic> json) {
     return UserResponse(
-      json['_id'],
-      json['username'],
+      json['id'],
+      json['email'],
     );
   }
 }

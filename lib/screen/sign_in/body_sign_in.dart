@@ -9,34 +9,26 @@ class BodySignIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              headerScreen(context),
-              const SignInForm(),
-              const SizedBox(height: 60,),
-              footerScreen(context)
-            ],
-          ),
-        ));
-  }
-
-  Widget headerScreen(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      height: 150,
-      alignment: Alignment.topRight,
-      child: Image.asset(ImageAssets.imgDash),
+    return SingleChildScrollView(
+      child: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            customizeLogo(context, true),
+            const SignInForm(),
+            const SizedBox(height: 40),
+            customizeLogo(context, false),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget footerScreen(BuildContext context) {
+  Widget customizeLogo(BuildContext context, bool isHeader) {
     return Container(
       width: MediaQuery.of(context).size.width,
-      height: 150,
-      alignment: Alignment.bottomLeft,
+      height: 130,
+      alignment: isHeader ? Alignment.topRight : Alignment.bottomLeft,
       child: Image.asset(ImageAssets.imgDash),
     );
   }
