@@ -19,12 +19,10 @@ class SignUpForm extends StatefulWidget {
 }
 
 class _SignUpFormState extends State<SignUpForm> {
+  TextEditingController fullNameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmController = TextEditingController();
-  String email = "";
-  String password = "";
-  String confirmPassword = "";
   bool isShowPassword = false;
   bool isShowConfirmPassword = false;
   bool isLoading = false;
@@ -43,34 +41,13 @@ class _SignUpFormState extends State<SignUpForm> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://10.0.2.2:5000/api/auth/register"),
-          RequestType.post,
-          headers: null,
-          body: const JsonEncoder().convert(registerRequest.toBodyRequest()));
-    } catch (error) {
-      debugPrint("Fail to register $error");
-      rethrow;
-    }
-    if (body == null) return RegisterResponse.buildDefault();
-    registerResponse = RegisterResponse.fromJson(body);
-    if (registerResponse.status == false) {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
-        Fluttertoast.showToast(
-            msg: "Username or password is not correct. Please try again!",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16);
-      });
-    } else {
+        Uri.parse("http://10.0.2.2:5000/api/auth/register"),
+        RequestType.post,
+        headers: null,
+        body: const JsonEncoder().convert(registerRequest.toBodyRequest()),
+      );
+      if (body == null) return RegisterResponse.buildDefault();
+      registerResponse = RegisterResponse.fromJson(body);
       setState(() {
         isLoading = false;
         if (isLoading) {
@@ -89,6 +66,25 @@ class _SignUpFormState extends State<SignUpForm> {
               context, SignInPage.routeName, (Route<dynamic> route) => false);
         }
       });
+    } catch (error) {
+      debugPrint("Fail to register $error");
+      setState(() {
+        isLoading = false;
+        if (isLoading) {
+          IsShowDialog().showLoadingDialog(context);
+        } else {
+          Navigator.of(context).pop();
+        }
+        Fluttertoast.showToast(
+            msg: "Username or password is not correct. Please try again!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 3,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16);
+      });
+      rethrow;
     }
     return registerResponse;
   }
@@ -99,6 +95,7 @@ class _SignUpFormState extends State<SignUpForm> {
       padding: const EdgeInsets.fromLTRB(10, 50, 10, 0),
       child: Column(
         children: [
+          fullNameTextField(),
           emailTextField(),
           passwordTextField(),
           confirmPasswordTextField(),
@@ -112,12 +109,17 @@ class _SignUpFormState extends State<SignUpForm> {
               onPressed: () {
                 setState(() {
                   if (Global.isAvailableToClick()) {
-                    RegisterRequest registerRequest =
-                        RegisterRequest(email, password);
-                    if (emailController.text.isNotEmpty &&
+                    RegisterRequest registerRequest = RegisterRequest(
+                      fullNameController.text,
+                      emailController.text,
+                      passwordController.text,
+                    );
+                    if (fullNameController.text.isNotEmpty &&
+                        emailController.text.isNotEmpty &&
                         passwordController.text.isNotEmpty &&
                         confirmController.text.isNotEmpty) {
-                      if (Global().checkEmailAddress(email) == true) {
+                      if (Global().checkEmailAddress(emailController.text) ==
+                          true) {
                         if (passwordController.text == confirmController.text) {
                           registerApi(registerRequest);
                         } else {
@@ -205,7 +207,50 @@ class _SignUpFormState extends State<SignUpForm> {
     );
   }
 
-  /// text field user name
+  /// text field full name
+  Widget fullNameTextField() {
+    return Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      margin: const EdgeInsets.only(bottom: 30),
+      padding: const EdgeInsets.only(left: 16, right: 10),
+      child: TextField(
+        controller: fullNameController,
+        keyboardType: TextInputType.text,
+        cursorColor: Colors.grey,
+        decoration: const InputDecoration(
+          hintText: 'Enter Your Name',
+          hintStyle: TextStyle(
+            fontFamily: 'NunitoSans',
+            fontStyle: FontStyle.normal,
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+          ),
+          border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          counterText: '',
+        ),
+        onChanged: (value) {
+          setState(() {
+            fullNameController.text = value;
+          });
+        },
+        style: const TextStyle(
+            color: Colors.black,
+            fontFamily: 'NunitoSans',
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            height: 1.9),
+      ),
+    );
+  }
+
+  /// text field email
   Widget emailTextField() {
     return Container(
       width: double.infinity,
@@ -235,7 +280,7 @@ class _SignUpFormState extends State<SignUpForm> {
             suffixIcon: Icon(Icons.email_outlined)),
         onChanged: (value) {
           setState(() {
-            email = value;
+            emailController.text = value;
           });
         },
         style: const TextStyle(
@@ -303,7 +348,7 @@ class _SignUpFormState extends State<SignUpForm> {
         ),
         onChanged: (value) {
           setState(() {
-            password = value;
+            passwordController.text = value;
           });
         },
         style: const TextStyle(
@@ -371,7 +416,7 @@ class _SignUpFormState extends State<SignUpForm> {
         ),
         onChanged: (value) {
           setState(() {
-            confirmPassword = value;
+            confirmController.text = value;
           });
         },
         style: const TextStyle(

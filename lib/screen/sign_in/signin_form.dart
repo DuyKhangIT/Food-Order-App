@@ -5,6 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 import '../../assets/images.dart';
 import '../../handle_api/handle_api.dart';
+import '../../model/error_response.dart';
 import '../../model/login/login_request.dart';
 import '../../model/login/login_response.dart';
 import '../../util/global.dart';
@@ -34,7 +35,7 @@ class _SignInFormState extends State<SignInForm> {
   }
 
   /// call api login
-  Future<LoginResponse> loginApi(LoginRequest loginRequest) async {
+  Future<void> loginApi(LoginRequest loginRequest) async {
     setState(() {
       isLoading = true;
       if (isLoading) {
@@ -44,6 +45,7 @@ class _SignInFormState extends State<SignInForm> {
       }
     });
     LoginResponse loginResponse;
+    ErrorResponse? errorResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
@@ -52,13 +54,7 @@ class _SignInFormState extends State<SignInForm> {
         headers: null,
         body: const JsonEncoder().convert(loginRequest.toBodyRequest()),
       );
-    } catch (error) {
-      debugPrint("Fail to login $error");
-      rethrow;
-    }
-    if (body == null) return LoginResponse.buildDefault();
-    loginResponse = LoginResponse.fromJson(body);
-    if (loginResponse.status == false) {
+      if (body == null) return;
       setState(() {
         isLoading = false;
         if (isLoading) {
@@ -67,30 +63,23 @@ class _SignInFormState extends State<SignInForm> {
           Navigator.of(context).pop();
         }
       });
-      Fluttertoast.showToast(
-          msg: "Username or password is not correct. Please try again!",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 3,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16);
-    } else {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          setState(() {
-            ConfigSharedPreferences().setStringValue(
-                SharedData.TOKEN.toString(),
-                loginResponse.dataResponseLogin!.token);
-            ConfigSharedPreferences().setStringValue(
-                SharedData.USERNAME.toString(),
-                loginResponse.dataResponseLogin!.userResponse!.email);
-            ConfigSharedPreferences().setStringValue(SharedData.ID.toString(),
-                loginResponse.dataResponseLogin!.userResponse!.id);
-          });
+      if (body.containsKey('statusCode')) {
+        errorResponse = ErrorResponse.fromJson(body);
+      } else {
+        loginResponse = LoginResponse.fromJson(body);
+        ConfigSharedPreferences().setStringValue(
+          SharedData.TOKEN.toString(),
+          loginResponse.token!,
+        );
+        ConfigSharedPreferences().setStringValue(
+          SharedData.USERNAME.toString(),
+          loginResponse.userResponse!.email,
+        );
+        ConfigSharedPreferences().setStringValue(
+          SharedData.ID.toString(),
+          loginResponse.userResponse!.id,
+        );
+        if (context.mounted) {
           Navigator.of(context).pop();
           Fluttertoast.showToast(
               msg: "Login Successfully",
@@ -103,10 +92,28 @@ class _SignInFormState extends State<SignInForm> {
           Navigator.pushNamedAndRemoveUntil(
               context, HomePage.routeName, (Route<dynamic> route) => false);
         }
+      }
+    } catch (error) {
+      debugPrint("Fail to login $error");
+      setState(() {
+        isLoading = false;
+        if (isLoading) {
+          IsShowDialog().showLoadingDialog(context);
+        } else {
+          Navigator.of(context).pop();
+        }
       });
+      Fluttertoast.showToast(
+        msg: "Username or password is not correct. Please try again!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16,
+      );
+      rethrow;
     }
-
-    return loginResponse;
   }
 
   @override
@@ -246,46 +253,46 @@ class _SignInFormState extends State<SignInForm> {
                 ),
 
                 /// button
-                Container(
-                  margin: const EdgeInsets.only(top: 20),
-                  height: 50,
-                  alignment: Alignment.center,
-                  width: MediaQuery.of(context).size.width,
-                  color: Colors.green,
-                  child: InkWell(
-                    onTap: () {
-                      if (Global.isAvailableToClick()) {
-                        LoginRequest loginRequest = LoginRequest(
-                            usernameController.text, passwordController.text);
-                        if (loginRequest.email.isNotEmpty &&
-                            loginRequest.password.isNotEmpty) {
-                          if (Global().checkEmailAddress(loginRequest.email) ==
-                              true) {
-                            loginApi(loginRequest);
-                          } else {
-                            Fluttertoast.showToast(
-                              msg: "Invalid email.Please try again!!",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              timeInSecForIosWeb: 3,
-                              backgroundColor: Colors.red,
-                              textColor: Colors.white,
-                              fontSize: 16,
-                            );
-                          }
+                GestureDetector(
+                  onTap: () {
+                    if (Global.isAvailableToClick()) {
+                      LoginRequest loginRequest = LoginRequest(
+                          usernameController.text, passwordController.text);
+                      if (loginRequest.email.isNotEmpty &&
+                          loginRequest.password.isNotEmpty) {
+                        if (Global().checkEmailAddress(loginRequest.email) ==
+                            true) {
+                          loginApi(loginRequest);
                         } else {
                           Fluttertoast.showToast(
-                            msg: "Please enter username and password!!",
+                            msg: "Invalid email.Please try again!!",
                             toastLength: Toast.LENGTH_SHORT,
                             gravity: ToastGravity.BOTTOM,
                             timeInSecForIosWeb: 3,
-                            backgroundColor: Colors.orange,
+                            backgroundColor: Colors.red,
                             textColor: Colors.white,
                             fontSize: 16,
                           );
                         }
+                      } else {
+                        Fluttertoast.showToast(
+                          msg: "Please enter username and password!!",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          timeInSecForIosWeb: 3,
+                          backgroundColor: Colors.orange,
+                          textColor: Colors.white,
+                          fontSize: 16,
+                        );
                       }
-                    },
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 20),
+                    height: 50,
+                    alignment: Alignment.center,
+                    width: MediaQuery.of(context).size.width,
+                    color: Colors.green,
                     child: const Text(
                       'Continue',
                       style: TextStyle(

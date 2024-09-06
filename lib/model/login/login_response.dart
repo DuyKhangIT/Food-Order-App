@@ -1,18 +1,18 @@
-import 'data_response.dart';
+import 'package:food_app_project/model/login/user_response.dart';
 
 class LoginResponse {
-  bool status = false;
-  DataResponseLogin? dataResponseLogin;
+  String? token = "";
+  UserResponse? userResponse;
 
   LoginResponse(
-    this.status,
-    this.dataResponseLogin,
+    this.token,
+    this.userResponse,
   );
   LoginResponse.buildDefault();
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
-      json['status'],
-      (json['data'] != null) ? DataResponseLogin.fromJson(json['data']) : null,
+      json['token'] ?? "",
+      (json['user'] != null) ? UserResponse.fromJson(json['user']) : null,
     );
   }
 }

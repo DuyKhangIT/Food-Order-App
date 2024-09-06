@@ -1,11 +1,13 @@
 class RegisterRequest {
-  String userName;
+  String fullName;
+  String email;
   String password;
 
-  RegisterRequest(this.userName, this.password);
+  RegisterRequest(this.fullName, this.email, this.password);
 
   Map<String, dynamic> toBodyRequest() => {
-    'username': userName,
-    'password': password,
-  };
+        'name': fullName,
+        'email': email,
+        'password': password,
+      };
 }

@@ -1,19 +1,16 @@
-import 'data_register_response.dart';
+import 'package:food_app_project/model/register/user_response.dart';
 
 class RegisterResponse {
-  bool status = false;
-  DataResponseRegister? dataResponseRegister;
+  UserResponseRegister? userResponseRegister;
 
   RegisterResponse(
-    this.status,
-    this.dataResponseRegister,
+    this.userResponseRegister,
   );
   RegisterResponse.buildDefault();
   factory RegisterResponse.fromJson(Map<String, dynamic> json) {
     return RegisterResponse(
-      json['status'],
-      (json['data'] != null)
-          ? DataResponseRegister.fromJson(json['data'])
+      (json['user'] != null)
+          ? UserResponseRegister.fromJson(json['user'])
           : null,
     );
   }
