@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:food_app_project/model/error_response.dart';
 
 import '../../assets/images.dart';
 import '../../handle_api/handle_api.dart';
@@ -30,8 +31,7 @@ class _AccountDetailState extends State<AccountDetail> {
   bool isShowChangeOldPassword = false;
   bool isShowChangeNewPassword = false;
   bool isShowChangeConfirmNewPassword = false;
-  bool isLoading = false;
-  String username = "";
+  String email = "";
 
   @override
   void initState() {
@@ -40,65 +40,51 @@ class _AccountDetailState extends State<AccountDetail> {
   }
 
   Future<void> getUserName() async {
-    username = await ConfigSharedPreferences()
-        .getStringValue(SharedData.USERNAME.toString(), defaultValue: "");
+    email = await ConfigSharedPreferences()
+        .getStringValue(SharedData.EMAIL.toString(), defaultValue: "");
     setState(() {
-      username;
+      email;
     });
   }
 
   /// call api change account
-  Future<ChangeAccountResponse> changeAccountApi(
+  Future<void> changeAccountApi(
       ChangeAccountRequest changeAccountRequest) async {
     setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
+      IsShowDialog().showLoadingDialog(context);
     });
+    ErrorResponse? errorResponse;
     ChangeAccountResponse changeAccountResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/user/update-user"),
-          RequestType.put,
-          headers: null,
-          body: const JsonEncoder()
-              .convert(changeAccountRequest.toBodyRequest()));
-    } catch (error) {
-      debugPrint("Fail to change account $error");
-      rethrow;
-    }
-    if (body == null) return ChangeAccountResponse.buildDefault();
-    changeAccountResponse = ChangeAccountResponse.fromJson(body);
-    if (changeAccountResponse.status == false) {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
+        Uri.parse("http://10.0.2.2:5000/api/auth/changePassword"),
+        RequestType.put,
+        headers: null,
+        body: const JsonEncoder().convert(changeAccountRequest.toBodyRequest()),
+      );
+      if (body == null) return;
+
+      if (body.containsKey('statusCode')) {
+        errorResponse = ErrorResponse.fromJson(body);
+        setState(() {
           Navigator.of(context).pop();
-        }
-        Fluttertoast.showToast(
-            msg: "Password is not correct. Please try again!",
+          Fluttertoast.showToast(
+            msg: errorResponse!.errorMessage,
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
             timeInSecForIosWeb: 3,
             backgroundColor: Colors.red,
             textColor: Colors.white,
-            fontSize: 16);
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
+            fontSize: 16,
+          );
+        });
+      } else {
+        changeAccountResponse = ChangeAccountResponse.fromJson(body);
+        setState(() {
           Navigator.of(context).pop();
           Fluttertoast.showToast(
-              msg: "Change Account Successfully",
+              msg: changeAccountResponse.message,
               toastLength: Toast.LENGTH_SHORT,
               gravity: ToastGravity.BOTTOM,
               timeInSecForIosWeb: 3,
@@ -107,10 +93,24 @@ class _AccountDetailState extends State<AccountDetail> {
               fontSize: 16);
           Navigator.pushNamedAndRemoveUntil(
               context, HomePage.routeName, (Route<dynamic> route) => false);
-        }
+        });
+      }
+    } catch (error) {
+      debugPrint("Fail to change account $error");
+      setState(() {
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+            msg: 'Lỗi Server',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 3,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16);
       });
+      rethrow;
     }
-    return changeAccountResponse;
+    return;
   }
 
   @override
@@ -131,14 +131,17 @@ class _AccountDetailState extends State<AccountDetail> {
             child: InkWell(
               onTap: () {
                 if (Global.isAvailableToClick()) {
-                  if (username.isNotEmpty &&
+                  if (email.isNotEmpty &&
                       changeOldPassword.isNotEmpty &&
                       changeNewPassword.isNotEmpty &&
                       changeConfirmNewPassword.isNotEmpty) {
                     if (changeNewPassword == changeConfirmNewPassword) {
                       ChangeAccountRequest changeAccountRequest =
                           ChangeAccountRequest(
-                              username, changeOldPassword, changeNewPassword);
+                        email,
+                        changeOldPassword,
+                        changeNewPassword,
+                      );
                       changeAccountApi(changeAccountRequest);
                     } else {
                       Fluttertoast.showToast(
@@ -231,7 +234,7 @@ class _AccountDetailState extends State<AccountDetail> {
         keyboardType: TextInputType.text,
         cursorColor: Colors.grey,
         decoration: InputDecoration(
-            hintText: username,
+            hintText: email,
             hintStyle: const TextStyle(
               fontFamily: 'NunitoSans',
               fontStyle: FontStyle.normal,

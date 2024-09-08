@@ -23,7 +23,7 @@ class _ListAllProductState extends State<ListAllProduct> {
   List<FoodsResponse> result = [];
   @override
   void initState() {
-    dataFoods = widget.productInfo.dataResponse!.listFoods!;
+    dataFoods = widget.productInfo.listFoods!;
     result = dataFoods;
     super.initState();
   }

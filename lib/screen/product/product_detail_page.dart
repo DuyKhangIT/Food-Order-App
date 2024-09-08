@@ -39,7 +39,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Future<void> getUserName() async {
     username = await ConfigSharedPreferences()
-        .getStringValue(SharedData.USERNAME.toString(), defaultValue: "");
+        .getStringValue(SharedData.EMAIL.toString(), defaultValue: "");
     setState(() {
       if (username.isNotEmpty && widget.dataFood!.id!.isNotEmpty) {
         CheckIsFavoriteRequest checkIsFavoriteRequest =

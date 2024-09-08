@@ -10,10 +10,10 @@ class HomeDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      child: const Column(
+    return const SingleChildScrollView(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           CategoriesStore(),
           ProductPopular(),

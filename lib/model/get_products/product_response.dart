@@ -1,18 +1,21 @@
-import 'data_response.dart';
+import 'foods_response.dart';
 
 class ProductResponse {
-  bool? status = false;
-  DataResponse? dataResponse;
+  List<FoodsResponse>? listFoods;
 
   ProductResponse(
-      this.status,
-      this.dataResponse,
-      );
+    this.listFoods,
+  );
   ProductResponse.buildDefault();
   factory ProductResponse.fromJson(Map<String, dynamic> json) {
-    return ProductResponse(
-      json['status'],
-        (json['data'] != null) ? DataResponse.fromJson(json['data']) : null,
-    );
+    List<FoodsResponse> foodsResponse = [];
+    if (json['foods'] != null) {
+      List<dynamic> arrData = json['foods'];
+      for (var i = 0; i < arrData.length; i++) {
+        foodsResponse
+            .add(FoodsResponse.fromJson(arrData[i] as Map<String, dynamic>));
+      }
+    }
+    return ProductResponse(foodsResponse);
   }
 }

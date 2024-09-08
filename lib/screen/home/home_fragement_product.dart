@@ -28,7 +28,7 @@ class _ProductPopularState extends State<ProductPopular> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/food"),
+          Uri.parse("http://10.0.2.2:5000/api/food/getAllFoods"),
           RequestType.get,
           headers: null,
           body: null);
@@ -41,7 +41,7 @@ class _ProductPopularState extends State<ProductPopular> {
     productResponse = ProductResponse.fromJson(body);
 
     setState(() {
-      data = productResponse.dataResponse!.listFoods;
+      data = productResponse.listFoods;
       dataProduct = productResponse;
     });
 
@@ -52,7 +52,7 @@ class _ProductPopularState extends State<ProductPopular> {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
-      margin: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+      margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -62,9 +62,10 @@ class _ProductPopularState extends State<ProductPopular> {
                   child: Text(
                 "Popular Products",
                 style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
               )),
               GestureDetector(
                 onTap: () {
@@ -72,8 +73,9 @@ class _ProductPopularState extends State<ProductPopular> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              ListAllProduct(productInfo: dataProduct!)),
+                        builder: (context) =>
+                            ListAllProduct(productInfo: dataProduct!),
+                      ),
                     );
                   }
                 },
@@ -84,17 +86,19 @@ class _ProductPopularState extends State<ProductPopular> {
               )
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 10),
           data != null
               ? GridView.builder(
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
                   primary: false,
-                  itemCount: 6, //data.length
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: data!.length > 6 ? 6 : data!.length, //data.length
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 0.65),
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 0.65,
+                  ),
                   itemBuilder: (context, index) {
                     return data![index].title!.isNotEmpty &&
                             data![index].price!.toString().isNotEmpty &&
@@ -104,32 +108,33 @@ class _ProductPopularState extends State<ProductPopular> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => ProductDetailPage(
-                                          dataFood: data![index],
-                                        )),
+                                  builder: (context) => ProductDetailPage(
+                                    dataFood: data![index],
+                                  ),
+                                ),
                               );
                             },
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 // image from api
                                 Image.network(
                                   data![index].image!,
                                   fit: BoxFit.cover,
-                                  width: 115,
-                                  height: 115,
+                                  width: 105,
+                                  height: 105,
                                 ),
 
                                 /// title from api
-                                Container(
-                                    margin: const EdgeInsets.only(top: 10),
-                                    constraints:
-                                        const BoxConstraints(maxHeight: 32),
-                                    child: Text(
-                                      data![index].title!,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    )),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: Text(
+                                    data![index].title!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
 
                                 /// price from api
                                 Container(
@@ -144,8 +149,9 @@ class _ProductPopularState extends State<ProductPopular> {
 
                                     /// api
                                     style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold),
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 )
                               ],
@@ -157,11 +163,12 @@ class _ProductPopularState extends State<ProductPopular> {
                   })
               : Container(
                   width: MediaQuery.of(context).size.width,
-                  constraints: const BoxConstraints(minHeight: 180),
+                  constraints: const BoxConstraints(minHeight: 170),
                   alignment: Alignment.center,
                   child: const CircularProgressIndicator(
                     color: Colors.green,
-                  ))
+                  ),
+                )
         ],
       ),
     );

@@ -27,8 +27,11 @@ class _CategoriesStoreState extends State<CategoriesStore> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/category"), RequestType.get,
-          headers: null, body: null);
+        Uri.parse("http://10.0.2.2:5000/api/category/getCategories"),
+        RequestType.get,
+        headers: null,
+        body: null,
+      );
     } catch (error) {
       debugPrint("Fail to foods info $error");
       rethrow;
@@ -38,7 +41,7 @@ class _CategoriesStoreState extends State<CategoriesStore> {
     storeResponse = StoreResponse.fromJson(body);
 
     setState(() {
-      dataCategories = storeResponse.dataCategoriesResponse!.listCategories;
+      dataCategories = storeResponse.listCategories;
       dataStore = storeResponse;
     });
 
@@ -49,8 +52,7 @@ class _CategoriesStoreState extends State<CategoriesStore> {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height / 4.3,
-      margin: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         children: [
           Row(
@@ -67,10 +69,12 @@ class _CategoriesStoreState extends State<CategoriesStore> {
                 onTap: () {
                   if (dataCategories != null) {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                ListAllCategories(storeInfo: dataStore!)));
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ListAllCategories(storeInfo: dataStore!),
+                      ),
+                    );
                   }
                 },
                 child: const Text(
@@ -86,24 +90,42 @@ class _CategoriesStoreState extends State<CategoriesStore> {
           dataCategories != null
               ? SizedBox(
                   width: MediaQuery.of(context).size.width,
-                  height: 150,
+                  height: 190,
                   child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: dataCategories!.length,
+                    shrinkWrap: true,
+                    primary: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: dataCategories!.length,
 
-                      /// data.length
-                      itemBuilder: (context, index) {
-                        return Container(
-                          width: 150, height: 150,
-                          padding: const EdgeInsets.all(5),
-
-                          /// call api img
-                          child: dataCategories![index].image!.isNotEmpty
-                              ? Image.network(dataCategories![index].image!,
-                                  fit: BoxFit.cover)
-                              : const SizedBox(),
-                        );
-                      }),
+                    /// data.length
+                    itemBuilder: (context, index) {
+                      return dataCategories![index].image!.isNotEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.network(
+                                    dataCategories![index].image!,
+                                    fit: BoxFit.cover,
+                                    width: 150,
+                                    height: 150,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    dataCategories![index].title!,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )
+                                ],
+                              ),
+                            )
+                          : const SizedBox();
+                    },
+                  ),
                 )
               : Container(
                   width: MediaQuery.of(context).size.width,

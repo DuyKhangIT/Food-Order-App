@@ -1,5 +1,5 @@
 class CategoriesResponse {
-  String? id = "";
+  String id = "";
   String? title = "";
   String? image = "";
   CategoriesResponse(

@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum SharedData {
   TOKEN,
-  USERNAME,
+  EMAIL,
   ID,
 }
 class ConfigSharedPreferences {

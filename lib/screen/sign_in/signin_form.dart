@@ -24,10 +24,7 @@ class SignInForm extends StatefulWidget {
 class _SignInFormState extends State<SignInForm> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  String username = "";
-  String password = "";
   bool isShowPassword = false;
-  bool isLoading = false;
 
   @override
   void initState() {
@@ -37,12 +34,7 @@ class _SignInFormState extends State<SignInForm> {
   /// call api login
   Future<void> loginApi(LoginRequest loginRequest) async {
     setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
+      IsShowDialog().showLoadingDialog(context);
     });
     LoginResponse loginResponse;
     ErrorResponse? errorResponse;
@@ -56,15 +48,19 @@ class _SignInFormState extends State<SignInForm> {
       );
       if (body == null) return;
       setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
+        Navigator.of(context).pop();
       });
       if (body.containsKey('statusCode')) {
         errorResponse = ErrorResponse.fromJson(body);
+        Fluttertoast.showToast(
+          msg: errorResponse.errorMessage,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
       } else {
         loginResponse = LoginResponse.fromJson(body);
         ConfigSharedPreferences().setStringValue(
@@ -72,7 +68,7 @@ class _SignInFormState extends State<SignInForm> {
           loginResponse.token!,
         );
         ConfigSharedPreferences().setStringValue(
-          SharedData.USERNAME.toString(),
+          SharedData.EMAIL.toString(),
           loginResponse.userResponse!.email,
         );
         ConfigSharedPreferences().setStringValue(
@@ -90,21 +86,19 @@ class _SignInFormState extends State<SignInForm> {
               textColor: Colors.white,
               fontSize: 16);
           Navigator.pushNamedAndRemoveUntil(
-              context, HomePage.routeName, (Route<dynamic> route) => false);
+            context,
+            HomePage.routeName,
+            (Route<dynamic> route) => false,
+          );
         }
       }
     } catch (error) {
       debugPrint("Fail to login $error");
       setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
+        Navigator.of(context).pop();
       });
       Fluttertoast.showToast(
-        msg: "Username or password is not correct. Please try again!",
+        msg: error.toString(),
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 3,
@@ -180,7 +174,7 @@ class _SignInFormState extends State<SignInForm> {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        username = value;
+                        usernameController.text = value;
                       });
                     },
                     style: const TextStyle(
@@ -239,7 +233,7 @@ class _SignInFormState extends State<SignInForm> {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        password = value;
+                        passwordController.text = value;
                       });
                     },
                     style: const TextStyle(

@@ -5,6 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 import '../../assets/images.dart';
 import '../../handle_api/handle_api.dart';
+import '../../model/error_response.dart';
 import '../../model/register/register_request.dart';
 import '../../model/register/register_response.dart';
 import '../../util/global.dart';
@@ -25,19 +26,14 @@ class _SignUpFormState extends State<SignUpForm> {
   TextEditingController confirmController = TextEditingController();
   bool isShowPassword = false;
   bool isShowConfirmPassword = false;
-  bool isLoading = false;
 
   /// call api register
-  Future<RegisterResponse> registerApi(RegisterRequest registerRequest) async {
+  Future<void> registerApi(RegisterRequest registerRequest) async {
     setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
+      IsShowDialog().showLoadingDialog(context);
     });
     RegisterResponse registerResponse;
+    ErrorResponse? errorResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
@@ -46,13 +42,21 @@ class _SignUpFormState extends State<SignUpForm> {
         headers: null,
         body: const JsonEncoder().convert(registerRequest.toBodyRequest()),
       );
-      if (body == null) return RegisterResponse.buildDefault();
-      registerResponse = RegisterResponse.fromJson(body);
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
+      if (body == null) return;
+      if (body.containsKey('statusCode')) {
+        errorResponse = ErrorResponse.fromJson(body);
+        Fluttertoast.showToast(
+          msg: errorResponse.errorMessage,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+      } else {
+        registerResponse = RegisterResponse.fromJson(body);
+        setState(() {
           Navigator.of(context).pop();
           Fluttertoast.showToast(
               msg: "Register Successfully",
@@ -63,30 +67,29 @@ class _SignUpFormState extends State<SignUpForm> {
               textColor: Colors.white,
               fontSize: 16);
           Navigator.pushNamedAndRemoveUntil(
-              context, SignInPage.routeName, (Route<dynamic> route) => false);
-        }
-      });
+            context,
+            SignInPage.routeName,
+            (Route<dynamic> route) => false,
+          );
+        });
+      }
     } catch (error) {
       debugPrint("Fail to register $error");
       setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
-        Fluttertoast.showToast(
-            msg: "Username or password is not correct. Please try again!",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16);
+        Navigator.of(context).pop();
       });
+      Fluttertoast.showToast(
+        msg: error.toString(),
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16,
+      );
       rethrow;
     }
-    return registerResponse;
+    return;
   }
 
   @override

@@ -1,20 +1,16 @@
-import 'data_change_account_response.dart';
-
 class ChangeAccountResponse {
   bool status = false;
-  DataChangeAccountResponse? dataChangeAccountResponse;
+  String message = "";
 
   ChangeAccountResponse(
     this.status,
-    this.dataChangeAccountResponse,
+    this.message,
   );
   ChangeAccountResponse.buildDefault();
   factory ChangeAccountResponse.fromJson(Map<String, dynamic> json) {
     return ChangeAccountResponse(
       json['status'],
-      (json['data'] != null)
-          ? DataChangeAccountResponse.fromJson(json['data'])
-          : null,
+      json['message'],
     );
   }
 }

@@ -22,7 +22,7 @@ class _ListAllCategoriesState extends State<ListAllCategories> {
   List<CategoriesResponse> resultCategory = [];
   @override
   void initState() {
-    dataCategories = widget.storeInfo.dataCategoriesResponse!.listCategories!;
+    dataCategories = widget.storeInfo.listCategories!;
     resultCategory = dataCategories;
     super.initState();
   }

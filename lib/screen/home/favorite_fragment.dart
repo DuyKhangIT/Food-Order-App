@@ -24,7 +24,7 @@ class _FavoriteDetailState extends State<FavoriteDetail> {
 
   Future<void> getUserName() async {
     username = await ConfigSharedPreferences()
-        .getStringValue(SharedData.USERNAME.toString(), defaultValue: "");
+        .getStringValue(SharedData.EMAIL.toString(), defaultValue: "");
     setState(() {
       if (username.isNotEmpty || username != "") {
         GetListFavoriteRequest getListFavoriteRequest =
