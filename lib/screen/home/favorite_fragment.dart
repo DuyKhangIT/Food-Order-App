@@ -1,13 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:food_app_project/model/error_response.dart';
+import 'package:food_app_project/model/get_products/foods_response.dart';
 
 import '../../handle_api/handle_api.dart';
-import '../../model/get_list_favorite/get_list_favorite_request/get_list_favorite_request.dart';
-import '../../model/get_list_favorite/get_list_favorite_response/favorite_foods_response.dart';
 import '../../model/get_list_favorite/get_list_favorite_response/get_list_favorite_response.dart';
-import '../../util/share_preferences.dart';
 import '../../util/show_loading_dialog.dart';
 
 class FavoriteDetail extends StatefulWidget {
@@ -18,108 +15,70 @@ class FavoriteDetail extends StatefulWidget {
 }
 
 class _FavoriteDetailState extends State<FavoriteDetail> {
-  String username = "";
-  List<FavoriteFoodsResponse>? listFav;
-  bool isLoading = false;
-
-  Future<void> getUserName() async {
-    username = await ConfigSharedPreferences()
-        .getStringValue(SharedData.EMAIL.toString(), defaultValue: "");
-    setState(() {
-      if (username.isNotEmpty || username != "") {
-        GetListFavoriteRequest getListFavoriteRequest =
-            GetListFavoriteRequest(username);
-        getListFavorites(getListFavoriteRequest);
-      }
-    });
-  }
+  List<FoodsResponse>? listFav;
 
   @override
   void initState() {
-    getUserName();
     super.initState();
+    getFavoriteList();
+  }
+
+  Future<void> getFavoriteList() async {
+    await getListFavorites();
   }
 
   /// call api list favorite
-  Future<GetListFavoriteResponse> getListFavorites(
-      GetListFavoriteRequest getListFavoriteRequest) async {
-    setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
-    });
+  Future<void> getListFavorites() async {
     GetListFavoriteResponse getListFavoriteResponse;
+    ErrorResponse errorResponse;
     Map<String, dynamic>? body;
     try {
+
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/fav/"),
-          RequestType.post,
-          headers: null,
-          body: const JsonEncoder()
-              .convert(getListFavoriteRequest.toBodyRequest()));
+        Uri.parse("http://10.0.2.2:5000/api/favorite/getFavoriteFoods"),
+        RequestType.get,
+        headers: null,
+        body: null,
+      );
+
+      if (body == null) return;
+
+      if (body.containsKey('statusCode')) {
+        errorResponse = ErrorResponse.fromJson(body);
+        Fluttertoast.showToast(
+          msg: errorResponse.errorMessage,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+      } else {
+        //get data from api here
+        getListFavoriteResponse = GetListFavoriteResponse.fromJson(body);
+
+       setState(() {
+         listFav = getListFavoriteResponse.favoriteFoods;
+       });
+
+        print('ListFV $listFav');
+      }
     } catch (error) {
       debugPrint("Fail to list fav $error");
+      Fluttertoast.showToast(
+        msg: "get list favorite fail!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16,
+      );
       rethrow;
     }
-    if (body == null) return GetListFavoriteResponse.buildDefault();
-    //get data from api here
-    getListFavoriteResponse = GetListFavoriteResponse.fromJson(body);
 
-    List<FavoriteFoodsResponse> favoriteFoodsList = [];
-    if (getListFavoriteResponse
-            .dataListFavoriteResponse!.favoriteObjectResponse !=
-        null) {
-      for (int i = 0;
-          i <
-              getListFavoriteResponse.dataListFavoriteResponse!
-                  .favoriteObjectResponse!.favoriteFood!.length;
-          i++) {
-        FavoriteFoodsResponse favoriteFoodsListResponse =
-            getListFavoriteResponse.dataListFavoriteResponse!
-                .favoriteObjectResponse!.favoriteFood![i];
-        favoriteFoodsList.add(FavoriteFoodsResponse(
-          favoriteFoodsListResponse.id ??= "",
-          favoriteFoodsListResponse.title ??= "",
-          favoriteFoodsListResponse.description ??= "",
-          favoriteFoodsListResponse.image ??= "",
-          favoriteFoodsListResponse.price ??= 0,
-        ));
-      }
-    }
-    if (getListFavoriteResponse.status == true) {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-          listFav = getListFavoriteResponse
-              .dataListFavoriteResponse!.favoriteObjectResponse!.favoriteFood;
-        }
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-          Fluttertoast.showToast(
-              msg: "get list favorite fail!",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 3,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16);
-        }
-      });
-    }
-
-    return getListFavoriteResponse;
+    return;
   }
 
   @override
@@ -127,10 +86,12 @@ class _FavoriteDetailState extends State<FavoriteDetail> {
     return listFav != null && listFav!.isNotEmpty
         ? Expanded(
             child: ListView.builder(
-                itemCount: listFav!.length,
-                itemBuilder: (context, index) {
-                  return favoritesItemList(context, index);
-                }))
+              itemCount: listFav!.length,
+              itemBuilder: (context, index) {
+                return favoritesItemList(context, index);
+              },
+            ),
+          )
         : const SizedBox();
   }
 

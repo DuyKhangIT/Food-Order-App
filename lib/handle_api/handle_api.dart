@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
+import '../util/global.dart';
+
 class HttpHelper {
   /// object
   static Future<Map<String, dynamic>?> invokeHttp(dynamic url, RequestType type,
@@ -67,8 +69,8 @@ class HttpHelper {
     } else {
       customizeHeaders = {
         "Content-Type": "application/json",
-        "Accept": "application/json",
-       // "Authorization": "Bearer " + Global.mToken
+        "Accept": "*/*",
+        "Authorization": "Bearer ${Global.token}"
       };
     }
     return customizeHeaders;

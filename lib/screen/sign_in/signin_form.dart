@@ -75,6 +75,7 @@ class _SignInFormState extends State<SignInForm> {
           SharedData.ID.toString(),
           loginResponse.userResponse!.id,
         );
+        Global.token = loginResponse.token!;
         if (context.mounted) {
           Navigator.of(context).pop();
           Fluttertoast.showToast(

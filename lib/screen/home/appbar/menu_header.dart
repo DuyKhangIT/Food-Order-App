@@ -35,7 +35,8 @@ class MenuHeader extends StatelessWidget {
                   /// clear token
                   ConfigSharedPreferences()
                       .setStringValue(SharedData.TOKEN.toString(), "");
-                  Navigator.pushNamedAndRemoveUntil(context, SignInPage.routeName,
+                  Global.token = '';
+                      Navigator.pushNamedAndRemoveUntil(context, SignInPage.routeName,
                           (Route<dynamic> route) => false);
                 }
               },

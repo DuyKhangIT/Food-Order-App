@@ -1,6 +1,7 @@
 
 
 class Global {
+    static String token = "";
     static String orderId = "";
 
     /// Condition to check the email address

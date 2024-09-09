@@ -2,12 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:food_app_project/model/add_or_remove_favorite/add_or_remove_favorite_request.dart';
+import 'package:food_app_project/model/add_or_remove_favorite/add_or_remove_favorite_response.dart';
 
 import '../../handle_api/handle_api.dart';
-import '../../model/add_favorite/add_favorite_request.dart';
-import '../../model/add_favorite/add_favorite_response.dart';
 import '../../model/check_is_fav/check_is_fav_requuest.dart';
 import '../../model/check_is_fav/check_is_favorite_response.dart';
+import '../../model/error_response.dart';
 import '../../model/get_products/foods_response.dart';
 import '../../model/post_order/order_request/post_order_request.dart';
 import '../../model/post_order/order_response/post_order_response.dart';
@@ -26,10 +27,8 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  bool isLoading = false;
-  String username = "";
-  int? isFavorite;
-  int? del;
+  String userId = "";
+  bool isFav = false;
 
   @override
   void initState() {
@@ -38,12 +37,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Future<void> getUserName() async {
-    username = await ConfigSharedPreferences()
-        .getStringValue(SharedData.EMAIL.toString(), defaultValue: "");
+    userId = await ConfigSharedPreferences()
+        .getStringValue(SharedData.ID.toString(), defaultValue: "");
     setState(() {
-      if (username.isNotEmpty && widget.dataFood!.id!.isNotEmpty) {
+      if (userId.isNotEmpty &&
+          widget.dataFood != null &&
+          widget.dataFood!.id!.isNotEmpty) {
         CheckIsFavoriteRequest checkIsFavoriteRequest =
-            CheckIsFavoriteRequest(username, widget.dataFood!.id!);
+            CheckIsFavoriteRequest(userId, widget.dataFood!.id!);
         checkIsFavoriteApi(checkIsFavoriteRequest);
       }
     });
@@ -53,12 +54,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Future<PostOrderResponse> addToCartApi(
       PostOrderRequest postOrderRequest) async {
     setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
+      IsShowDialog().showLoadingDialog(context);
     });
     PostOrderResponse postOrderResponse;
     Map<String, dynamic>? body;
@@ -70,20 +66,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     } catch (error) {
       debugPrint("Fail to add to cart $error");
       setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-          Fluttertoast.showToast(
-              msg: "Error from server",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16);
-        }
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: "Error from server",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
       });
       rethrow;
     }
@@ -91,39 +83,32 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     postOrderResponse = PostOrderResponse.fromJson(body);
     if (postOrderResponse.status == false) {
       setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
-      });
-      Fluttertoast.showToast(
+        Fluttertoast.showToast(
           msg: "Add to cart fail",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
           timeInSecForIosWeb: 3,
           backgroundColor: Colors.red,
           textColor: Colors.white,
-          fontSize: 16);
+          fontSize: 16,
+        );
+      });
     } else {
       setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-          Fluttertoast.showToast(
-              msg: "Add to cart Successfully",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.green,
-              textColor: Colors.white,
-              fontSize: 16);
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const HomePage()));
-        }
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: "Add to cart Successfully",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
       });
     }
 
@@ -131,90 +116,79 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   /// call api add to favorite
-  Future<AddFavoriteResponse> addToFavoriteApi(
-      AddFavoriteRequest addFavoriteRequest) async {
+  Future<void> addOrRemoveFavoriteApi(
+    AddOrRemoveFavoriteRequest addOrRemoveFavoriteRequest,
+  ) async {
     setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
+      IsShowDialog().showLoadingDialog(context);
     });
-    AddFavoriteResponse addFavoriteResponse;
+    AddOrRemoveFavoriteResponse addOrRemoveFavoriteResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/fav/add"), RequestType.post,
-          headers: null,
-          body:
-              const JsonEncoder().convert(addFavoriteRequest.toBodyRequest()));
+        Uri.parse("http://10.0.2.2:5000/api/favorite/toggleFavorite"),
+        RequestType.post,
+        headers: null,
+        body: const JsonEncoder().convert(
+          addOrRemoveFavoriteRequest.toBodyRequest(),
+        ),
+      );
     } catch (error) {
       debugPrint("Fail to add to fav $error");
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
+      setState(
+        () {
           Navigator.of(context).pop();
           Fluttertoast.showToast(
-              msg: "Error from server",
+            msg: "Error from server",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16,
+          );
+        },
+      );
+      rethrow;
+    }
+    if (body == null) return;
+    addOrRemoveFavoriteResponse = AddOrRemoveFavoriteResponse.fromJson(body);
+    if (addOrRemoveFavoriteResponse.status == false) {
+      setState(() {
+        Navigator.of(context).pop();
+      });
+      Fluttertoast.showToast(
+        msg: "Add to favorite fail",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16,
+      );
+    } else {
+      if (addOrRemoveFavoriteResponse.message == "Favorited") {
+        setState(
+          () {
+            Navigator.of(context).pop();
+            Fluttertoast.showToast(
+              msg: "Add to favorite Successfully",
               toastLength: Toast.LENGTH_SHORT,
               gravity: ToastGravity.BOTTOM,
               timeInSecForIosWeb: 1,
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.green,
               textColor: Colors.white,
-              fontSize: 16);
-        }
-      });
-      rethrow;
-    }
-    if (body == null) return AddFavoriteResponse.buildDefault();
-    addFavoriteResponse = AddFavoriteResponse.fromJson(body);
-    if (addFavoriteResponse.status == false) {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
-      });
-      Fluttertoast.showToast(
-          msg: "Add to favorite fail",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 3,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16);
-    } else {
-      if (addFavoriteResponse.del == 0) {
-        setState(() {
-          isLoading = false;
-          if (isLoading) {
-            IsShowDialog().showLoadingDialog(context);
-          } else {
-            Navigator.of(context).pop();
-            Fluttertoast.showToast(
-                msg: "Add to favorite Successfully",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.green,
-                textColor: Colors.white,
-                fontSize: 16);
-            del = addFavoriteResponse.del;
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const HomePage()));
-          }
-        });
+              fontSize: 16,
+            );
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          },
+        );
       } else {
-        setState(() {
-          isLoading = false;
-          if (isLoading) {
-            IsShowDialog().showLoadingDialog(context);
-          } else {
+        setState(
+          () {
             Navigator.of(context).pop();
             Fluttertoast.showToast(
                 msg: "Cancel to favorite Successfully",
@@ -224,94 +198,81 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 backgroundColor: Colors.green,
                 textColor: Colors.white,
                 fontSize: 16);
-            del = addFavoriteResponse.del;
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const HomePage()));
-          }
-        });
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          },
+        );
       }
     }
 
-    return addFavoriteResponse;
+    return;
   }
 
   /// call api check is favorite
-  Future<CheckIsFavoriteResponse> checkIsFavoriteApi(
-      CheckIsFavoriteRequest checkIsFavoriteRequest) async {
+  Future<void> checkIsFavoriteApi(
+    CheckIsFavoriteRequest checkIsFavoriteRequest,
+  ) async {
     setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
+      IsShowDialog().showLoadingDialog(context);
     });
     CheckIsFavoriteResponse checkIsFavoriteResponse;
+    ErrorResponse? errorResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/fav/isFav"),
-          RequestType.post,
-          headers: null,
-          body: const JsonEncoder()
-              .convert(checkIsFavoriteRequest.toBodyRequest()));
+        Uri.parse("http://10.0.2.2:5000/api/favorite/checkFavorite"),
+        RequestType.post,
+        headers: null,
+        body:
+            const JsonEncoder().convert(checkIsFavoriteRequest.toBodyRequest()),
+      );
+      if (body == null) return;
+      checkIsFavoriteResponse = CheckIsFavoriteResponse.fromJson(body);
+      if (body.containsKey('statusCode')) {
+        errorResponse = ErrorResponse.fromJson(body);
+        Fluttertoast.showToast(
+          msg: errorResponse.errorMessage,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+      } else {
+        if (checkIsFavoriteResponse.isFavorite) {
+          setState(() {
+            Navigator.of(context).pop();
+
+            isFav = checkIsFavoriteResponse.isFavorite;
+          });
+        } else {
+          setState(() {
+            Navigator.of(context).pop();
+
+            isFav = checkIsFavoriteResponse.isFavorite;
+          });
+        }
+      }
     } catch (error) {
       debugPrint("Fail to check fav $error");
       setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-          Fluttertoast.showToast(
-              msg: "Error from server",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16);
-        }
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: "Error from server",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
       });
       rethrow;
     }
-    if (body == null) return CheckIsFavoriteResponse.buildDefault();
-    checkIsFavoriteResponse = CheckIsFavoriteResponse.fromJson(body);
-    if (checkIsFavoriteResponse.status == false) {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
-      });
-    } else {
-      if (checkIsFavoriteResponse.isFav == 0) {
-        setState(() {
-          isLoading = false;
-          if (isLoading) {
-            IsShowDialog().showLoadingDialog(context);
-          } else {
-            Navigator.of(context).pop();
-
-            isFavorite = checkIsFavoriteResponse.isFav;
-          }
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-          if (isLoading) {
-            IsShowDialog().showLoadingDialog(context);
-          } else {
-            Navigator.of(context).pop();
-            isFavorite = checkIsFavoriteResponse.isFav;
-          }
-        });
-      }
-    }
-
-    return checkIsFavoriteResponse;
+    return;
   }
 
   @override
@@ -319,15 +280,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
-        leading: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          },
-          child: const Icon(Icons.arrow_back),
-        ),
         title: const Text("Details"),
       ),
       body: bodyProduct(context),
@@ -372,9 +324,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return InkWell(
       onTap: () {
         if (Global.isAvailableToClick()) {
-          if (username.isNotEmpty && widget.dataFood!.id!.isNotEmpty) {
+          if (userId.isNotEmpty && widget.dataFood!.id!.isNotEmpty) {
             PostOrderRequest postOrderRequest = PostOrderRequest(
-                username, Global.orderId, widget.dataFood!.id!);
+                userId, Global.orderId, widget.dataFood!.id!);
             addToCartApi(postOrderRequest);
           } else {
             Fluttertoast.showToast(
@@ -410,10 +362,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return InkWell(
       onTap: () {
         if (Global.isAvailableToClick()) {
-          if (username.isNotEmpty && widget.dataFood!.id!.isNotEmpty) {
-            AddFavoriteRequest addFavoriteRequest =
-                AddFavoriteRequest(username, widget.dataFood!.id!);
-            addToFavoriteApi(addFavoriteRequest);
+          if (userId.isNotEmpty &&
+              widget.dataFood != null &&
+              widget.dataFood!.id!.isNotEmpty) {
+            AddOrRemoveFavoriteRequest addOrRemoveFavoriteRequest =
+                AddOrRemoveFavoriteRequest(userId, widget.dataFood!.id!);
+            addOrRemoveFavoriteApi(addOrRemoveFavoriteRequest);
           }
         }
       },
@@ -424,11 +378,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           height: 50,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-              color: Colors.green, borderRadius: BorderRadius.circular(10)),
+            color: isFav ? Colors.red : Colors.green,
+            borderRadius: BorderRadius.circular(10),
+          ),
           child: Text(
-            isFavorite == 0 ? "Add to favorites" : "Cancel favorites",
+            isFav ? "Cancel favorites" : "Add to favorites",
             style: const TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ),
       ),

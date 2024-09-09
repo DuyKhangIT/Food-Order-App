@@ -73,22 +73,22 @@ class _ListAllProductState extends State<ListAllProduct> {
                 });
               },
               decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.only(top: (11), bottom: (10)),
-                  prefixIcon: const Icon(Icons.search),
-                  prefixIconConstraints: const BoxConstraints(
-                    minHeight: (24),
-                    minWidth: (40),
-                  ),
-                  hintText: "Search Product...",
-                  hintStyle: TextStyle(
-                      color: Colors.black.withOpacity(0.2),
-                      fontFamily: 'NunitoSans',
-                      fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.w400,
-                      fontSize: (14)),
-                  border: InputBorder.none),
+                isDense: true,
+                contentPadding: const EdgeInsets.only(top: (11), bottom: (10)),
+                prefixIcon: const Icon(Icons.search),
+                prefixIconConstraints: const BoxConstraints(
+                  minHeight: (24),
+                  minWidth: (40),
+                ),
+                hintText: "Search Product...",
+                hintStyle: TextStyle(
+                    color: Colors.black.withOpacity(0.2),
+                    fontFamily: 'NunitoSans',
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.w400,
+                    fontSize: (14)),
+                border: InputBorder.none,
+              ),
             ),
           ),
           elevation: 0,
@@ -105,18 +105,20 @@ class _ListAllProductState extends State<ListAllProduct> {
                   primary: false,
                   itemCount: result.length, //data.length
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 0.8),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 0.8,
+                  ),
                   itemBuilder: (context, index) {
                     return InkWell(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => ProductDetailPage(
-                                    dataFood: result[index],
-                                  )),
+                            builder: (context) => ProductDetailPage(
+                              dataFood: result[index],
+                            ),
+                          ),
                         );
                       },
                       child: Column(
@@ -132,13 +134,14 @@ class _ListAllProductState extends State<ListAllProduct> {
 
                           /// title from api
                           Container(
-                              margin: const EdgeInsets.only(top: 10),
-                              constraints: const BoxConstraints(maxHeight: 32),
-                              child: Text(
-                                result[index].title!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              )),
+                            margin: const EdgeInsets.only(top: 10),
+                            constraints: const BoxConstraints(maxHeight: 32),
+                            child: Text(
+                              result[index].title!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
 
                           /// price from api
                           Container(
@@ -160,7 +163,8 @@ class _ListAllProductState extends State<ListAllProduct> {
                         ],
                       ),
                     );
-                  }),
+                  },
+                ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:food_app_project/screen/sign_in/sign_in_page.dart';
 
+import '../util/global.dart';
 import '../util/share_preferences.dart';
 import 'home/home_page.dart';
 
@@ -28,12 +29,13 @@ class _SplashPageState extends State<SplashPage> {
         isNewUser = true;
       });
     } else {
-      loadData();
+      loadData(userId);
     }
   }
-  Future<void> loadData() async {
+  Future<void> loadData(String token) async {
     await Future.delayed(const Duration(seconds: 3));
     setState(() {
+      Global.token = token;
       Navigator.pushNamedAndRemoveUntil(context, HomePage.routeName, (Route<dynamic> route) => false);
     });
   }

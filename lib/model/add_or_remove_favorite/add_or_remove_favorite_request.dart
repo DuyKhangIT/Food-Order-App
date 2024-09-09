@@ -1,9 +1,9 @@
-class CheckIsFavoriteRequest {
+class AddOrRemoveFavoriteRequest {
   String userId = "";
   String foodId = "";
 
 
-  CheckIsFavoriteRequest(this.userId,this.foodId);
+  AddOrRemoveFavoriteRequest(this.userId,this.foodId);
 
   Map<String, dynamic> toBodyRequest() => {
     'userId': userId,

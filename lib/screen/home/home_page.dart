@@ -117,11 +117,31 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.green,
         automaticallyImplyLeading: false,
         title: homePage
-            ? const Text("Home")
+            ? const Text(
+                "Home",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              )
             : favorites
-                ? const Text("Favorites")
+                ? const Text(
+                    "Favorites",
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  )
                 : notification
-                    ? const Text("Notificaitons")
+                    ? const Text(
+                        "Notificaitons",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      )
                     : const MenuHeader(),
         actions: homePage
             ? [
@@ -137,13 +157,14 @@ class _HomePageState extends State<HomePage> {
                       );
                     } else {
                       Fluttertoast.showToast(
-                          msg: "Do not exist order!",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          timeInSecForIosWeb: 3,
-                          backgroundColor: Colors.red,
-                          textColor: Colors.white,
-                          fontSize: 16);
+                        msg: "Do not exist order!",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        timeInSecForIosWeb: 3,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                        fontSize: 16,
+                      );
                     }
                   },
                   child: Padding(
@@ -154,7 +175,10 @@ class _HomePageState extends State<HomePage> {
                           height: 40,
                           width: 40,
                           padding: const EdgeInsets.all(10),
-                          child: const Icon(Icons.shopping_cart_outlined),
+                          child: const Icon(
+                            Icons.shopping_cart_outlined,
+                            color: Colors.white,
+                          ),
                         ),
                         listDataOrder != null && listDataOrder!.isNotEmpty
                             ? Positioned(
