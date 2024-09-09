@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:food_app_project/model/get_products/foods_response.dart';
 
 import '../../handle_api/handle_api.dart';
 import '../../model/get_order/get_order_response/get_order_response.dart';
@@ -26,8 +27,8 @@ class _HomePageState extends State<HomePage> {
   bool favorites = true;
   bool notification = true;
   bool homePage = true;
-  List<OrderDetailResponseGet>? listDataOrder;
   String userId = "";
+  List<FoodsResponse> basketList = [];
 
   Future<void> getUserName() async {
     userId = await ConfigSharedPreferences()
@@ -42,6 +43,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     getUserName();
+    basketList = Global.basketList;
     super.initState();
   }
 
@@ -88,8 +90,8 @@ class _HomePageState extends State<HomePage> {
                 null &&
             getOrderResponse.dataGetOrderResponse!.responseOrderList!
                 .orderDetailResponseGet!.isNotEmpty) {
-          listDataOrder = getOrderResponse
-              .dataGetOrderResponse!.responseOrderList!.orderDetailResponseGet!;
+          // listDataOrder = getOrderResponse
+          //     .dataGetOrderResponse!.responseOrderList!.orderDetailResponseGet!;
         }
         if (getOrderResponse
             .dataGetOrderResponse!.responseOrderList!.orderId.isNotEmpty) {
@@ -147,12 +149,12 @@ class _HomePageState extends State<HomePage> {
             ? [
                 GestureDetector(
                   onTap: () {
-                    if (listDataOrder != null && listDataOrder!.isNotEmpty) {
+                    if (basketList.isNotEmpty) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => CartPage(
-                            dataOrder: listDataOrder,
+                            dataOrder: basketList,
                           ),
                         ),
                       );
@@ -181,32 +183,31 @@ class _HomePageState extends State<HomePage> {
                             color: Colors.white,
                           ),
                         ),
-                        listDataOrder != null && listDataOrder!.isNotEmpty
-                            ? Positioned(
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(1.5),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 16,
-                                    minHeight: 16,
-                                  ),
-                                  child: Text(
-                                    listDataOrder!.length > 9
-                                        ? "9+"
-                                        : "${listDataOrder!.length}",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10.5,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
+                        if (basketList.isNotEmpty)
+                          Positioned(
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(1.5),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                basketList.length > 9
+                                    ? "9+"
+                                    : "${basketList.length}",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10.5,
                                 ),
-                              )
-                            : Container()
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          )
                       ],
                     ),
                   ),

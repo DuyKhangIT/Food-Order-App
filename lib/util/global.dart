@@ -1,9 +1,12 @@
 
 
+import 'package:food_app_project/model/get_products/foods_response.dart';
+
 class Global {
     static String token = "";
     static String orderId = "";
     static String apiAddress = "http://10.0.2.2:5000";
+    static List<FoodsResponse> basketList = [];
 
     /// Condition to check the email address
     bool checkEmailAddress(String newEmail) {

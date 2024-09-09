@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:food_app_project/model/get_products/foods_response.dart';
 
 import '../../handle_api/handle_api.dart';
 import '../../model/check_out_order/checkout_order_request.dart';
@@ -18,7 +19,7 @@ import '../home/home_page.dart';
 
 class CartPage extends StatefulWidget {
   static String routeName = "/cart_screen";
-  final List<OrderDetailResponseGet>? dataOrder;
+  final List<FoodsResponse>? dataOrder;
   const CartPage({Key? key, required this.dataOrder}) : super(key: key);
 
   @override
@@ -26,7 +27,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  List<OrderDetailResponseGet>? listDataOrder;
+  List<FoodsResponse>? listDataOrder;
   bool isLoading = false;
   @override
   void initState() {
@@ -34,73 +35,10 @@ class _CartPageState extends State<CartPage> {
     super.initState();
   }
 
-  /// call api remove item order
-  Future<RemoveItemOrderResponse> removeItemOrderApi(
-      RemoveItemOrderRequest removeItemOrderRequest) async {
-    setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
-    });
-    RemoveItemOrderResponse removeItemOrderResponse;
-    Map<String, dynamic>? body;
-    try {
-      body = await HttpHelper.invokeHttp(
-          Uri.parse(
-              "http://14.225.204.248:7070/api/order/remove-item"),
-          RequestType.post,
-          headers: null,
-          body: const JsonEncoder()
-              .convert(removeItemOrderRequest.toBodyRequest()));
-    } catch (error) {
-      debugPrint("Fail to remove item order $error");
-      rethrow;
-    }
-    if (body == null) return RemoveItemOrderResponse.buildDefault();
-    removeItemOrderResponse = RemoveItemOrderResponse.fromJson(body);
-    if (removeItemOrderResponse.status == false) {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
-        Fluttertoast.showToast(
-            msg: "Remove item fail!",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16);
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-          Fluttertoast.showToast(
-              msg: "Remove item successfully",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 3,
-              backgroundColor: Colors.green,
-              textColor: Colors.white,
-              fontSize: 16);
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
-        }
-      });
-    }
-    return removeItemOrderResponse;
+  void handleBasketList() {
+    int quantity =0;
+
+
   }
 
   /// call api sum order
@@ -176,8 +114,7 @@ class _CartPageState extends State<CartPage> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse(
-              "http://14.225.204.248:7070/api/order/checkout"),
+          Uri.parse("http://14.225.204.248:7070/api/order/checkout"),
           RequestType.post,
           headers: null,
           body: const JsonEncoder()
@@ -230,6 +167,12 @@ class _CartPageState extends State<CartPage> {
     }
 
     return checkoutOrderResponse;
+  }
+
+  void removeFoodToBasket(FoodsResponse food) {
+    setState(() {
+      Global.basketList.remove(food);
+    });
   }
 
   @override
@@ -319,18 +262,23 @@ class _CartPageState extends State<CartPage> {
                     maxLines: 1,
                   )),
               GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (Global.orderId.isNotEmpty) {
-                        RemoveItemOrderRequest removeItemRequest =
-                            RemoveItemOrderRequest(Global.orderId, index);
-                        removeItemOrderApi(removeItemRequest);
-                      }
-                    });
-                  },
-                  child: const Icon(Icons.delete_outline))
+                onTap: () {
+                  removeFoodToBasket(listDataOrder![index]);
+                },
+                child: const Icon(Icons.delete_outline),
+              )
             ],
           ),
+          const SizedBox(height: 10),
+          const Text(
+            "Số lượng: 2",
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+          )
         ],
       ),
     );

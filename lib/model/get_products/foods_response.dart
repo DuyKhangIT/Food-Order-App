@@ -4,6 +4,7 @@ class FoodsResponse {
   String? description = "";
   int? price = 0;
   String? image = "";
+  int? quantity = 0;
   FoodsResponse(
     this.id,
     this.title,
