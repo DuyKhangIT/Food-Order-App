@@ -151,9 +151,10 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => CartPage(
-                                  dataOrder: listDataOrder,
-                                )),
+                          builder: (context) => CartPage(
+                            dataOrder: listDataOrder,
+                          ),
+                        ),
                       );
                     } else {
                       Fluttertoast.showToast(

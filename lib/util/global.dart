@@ -3,6 +3,7 @@
 class Global {
     static String token = "";
     static String orderId = "";
+    static String apiAddress = "http://10.0.2.2:5000";
 
     /// Condition to check the email address
     bool checkEmailAddress(String newEmail) {

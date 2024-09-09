@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../handle_api/handle_api.dart';
 import '../../model/get_categories/categories_response.dart';
 import '../../model/get_categories/store_response.dart';
+import '../../util/global.dart';
 import '../categories/list_all_categories.dart';
 
 class CategoriesStore extends StatefulWidget {
@@ -27,7 +28,7 @@ class _CategoriesStoreState extends State<CategoriesStore> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-        Uri.parse("http://10.0.2.2:5000/api/category/getCategories"),
+        Uri.parse("${Global.apiAddress}/api/category/getCategories"),
         RequestType.get,
         headers: null,
         body: null,

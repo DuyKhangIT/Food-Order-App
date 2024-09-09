@@ -41,7 +41,7 @@ class _SignInFormState extends State<SignInForm> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-        Uri.parse("http://10.0.2.2:5000/api/auth/login"),
+        Uri.parse("${Global.apiAddress}/api/auth/login"),
         RequestType.post,
         headers: null,
         body: const JsonEncoder().convert(loginRequest.toBodyRequest()),

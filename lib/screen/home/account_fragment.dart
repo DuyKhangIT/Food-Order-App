@@ -58,7 +58,7 @@ class _AccountDetailState extends State<AccountDetail> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-        Uri.parse("http://10.0.2.2:5000/api/auth/changePassword"),
+        Uri.parse("${Global.apiAddress}/api/auth/changePassword"),
         RequestType.put,
         headers: null,
         body: const JsonEncoder().convert(changeAccountRequest.toBodyRequest()),

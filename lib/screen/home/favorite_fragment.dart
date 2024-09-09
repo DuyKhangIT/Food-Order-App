@@ -5,6 +5,7 @@ import 'package:food_app_project/model/get_products/foods_response.dart';
 
 import '../../handle_api/handle_api.dart';
 import '../../model/get_list_favorite/get_list_favorite_response/get_list_favorite_response.dart';
+import '../../util/global.dart';
 import '../../util/show_loading_dialog.dart';
 
 class FavoriteDetail extends StatefulWidget {
@@ -35,7 +36,7 @@ class _FavoriteDetailState extends State<FavoriteDetail> {
     try {
 
       body = await HttpHelper.invokeHttp(
-        Uri.parse("http://10.0.2.2:5000/api/favorite/getFavoriteFoods"),
+        Uri.parse("${Global.apiAddress}/api/favorite/getFavoriteFoods"),
         RequestType.get,
         headers: null,
         body: null,

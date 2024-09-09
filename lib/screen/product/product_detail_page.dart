@@ -13,7 +13,6 @@ import '../../model/get_products/foods_response.dart';
 import '../../model/post_order/order_request/post_order_request.dart';
 import '../../model/post_order/order_response/post_order_response.dart';
 import '../../util/global.dart';
-import '../../util/share_preferences.dart';
 import '../../util/show_loading_dialog.dart';
 import '../home/home_page.dart';
 
@@ -27,7 +26,6 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  String userId = "";
   bool isFav = false;
 
   @override
@@ -37,17 +35,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Future<void> getUserName() async {
-    userId = await ConfigSharedPreferences()
-        .getStringValue(SharedData.ID.toString(), defaultValue: "");
-    setState(() {
-      if (userId.isNotEmpty &&
-          widget.dataFood != null &&
-          widget.dataFood!.id!.isNotEmpty) {
-        CheckIsFavoriteRequest checkIsFavoriteRequest =
-            CheckIsFavoriteRequest(userId, widget.dataFood!.id!);
-        checkIsFavoriteApi(checkIsFavoriteRequest);
-      }
-    });
+    if (widget.dataFood != null && widget.dataFood!.id!.isNotEmpty) {
+      CheckIsFavoriteRequest checkIsFavoriteRequest =
+          CheckIsFavoriteRequest(widget.dataFood!.id!);
+      checkIsFavoriteApi(checkIsFavoriteRequest);
+    }
   }
 
   /// call api add to cart
@@ -126,7 +118,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-        Uri.parse("http://10.0.2.2:5000/api/favorite/toggleFavorite"),
+        Uri.parse("${Global.apiAddress}/api/favorite/toggleFavorite"),
         RequestType.post,
         headers: null,
         body: const JsonEncoder().convert(
@@ -214,15 +206,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Future<void> checkIsFavoriteApi(
     CheckIsFavoriteRequest checkIsFavoriteRequest,
   ) async {
-    setState(() {
-      IsShowDialog().showLoadingDialog(context);
-    });
     CheckIsFavoriteResponse checkIsFavoriteResponse;
     ErrorResponse? errorResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-        Uri.parse("http://10.0.2.2:5000/api/favorite/checkFavorite"),
+        Uri.parse("${Global.apiAddress}/api/favorite/checkFavorite"),
         RequestType.post,
         headers: null,
         body:
@@ -242,34 +231,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           fontSize: 16,
         );
       } else {
-        if (checkIsFavoriteResponse.isFavorite) {
-          setState(() {
-            Navigator.of(context).pop();
-
-            isFav = checkIsFavoriteResponse.isFavorite;
-          });
-        } else {
-          setState(() {
-            Navigator.of(context).pop();
-
-            isFav = checkIsFavoriteResponse.isFavorite;
-          });
-        }
+        setState(() {
+          isFav = checkIsFavoriteResponse.isFavorite;
+        });
       }
     } catch (error) {
       debugPrint("Fail to check fav $error");
-      setState(() {
-        Navigator.of(context).pop();
-        Fluttertoast.showToast(
-          msg: "Error from server",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16,
-        );
-      });
+      Fluttertoast.showToast(
+        msg: "Error from server",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16,
+      );
       rethrow;
     }
     return;
@@ -280,7 +256,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
-        title: const Text("Details"),
+        title: const Text(
+          "Details",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ),
       body: bodyProduct(context),
       bottomNavigationBar: Container(
@@ -324,9 +307,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return InkWell(
       onTap: () {
         if (Global.isAvailableToClick()) {
-          if (userId.isNotEmpty && widget.dataFood!.id!.isNotEmpty) {
-            PostOrderRequest postOrderRequest = PostOrderRequest(
-                userId, Global.orderId, widget.dataFood!.id!);
+          if (widget.dataFood!.id!.isNotEmpty) {
+            PostOrderRequest postOrderRequest =
+                PostOrderRequest(Global.orderId, widget.dataFood!.id!);
             addToCartApi(postOrderRequest);
           } else {
             Fluttertoast.showToast(
@@ -362,11 +345,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return InkWell(
       onTap: () {
         if (Global.isAvailableToClick()) {
-          if (userId.isNotEmpty &&
-              widget.dataFood != null &&
-              widget.dataFood!.id!.isNotEmpty) {
+          if (widget.dataFood != null && widget.dataFood!.id!.isNotEmpty) {
             AddOrRemoveFavoriteRequest addOrRemoveFavoriteRequest =
-                AddOrRemoveFavoriteRequest(userId, widget.dataFood!.id!);
+                AddOrRemoveFavoriteRequest(widget.dataFood!.id!);
             addOrRemoveFavoriteApi(addOrRemoveFavoriteRequest);
           }
         }

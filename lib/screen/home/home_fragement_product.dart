@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../handle_api/handle_api.dart';
 import '../../model/get_products/foods_response.dart';
 import '../../model/get_products/product_response.dart';
+import '../../util/global.dart';
 import '../product/list_all_product.dart';
 import '../product/product_detail_page.dart';
 
@@ -28,7 +29,7 @@ class _ProductPopularState extends State<ProductPopular> {
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://10.0.2.2:5000/api/food/getAllFoods"),
+          Uri.parse("${Global.apiAddress}/api/food/getAllFoods"),
           RequestType.get,
           headers: null,
           body: null);
