@@ -4,7 +4,6 @@ class FoodsResponse {
   String? description = "";
   int? price = 0;
   String? image = "";
-  int? quantity = 0;
   FoodsResponse(
     this.id,
     this.title,
@@ -12,6 +11,16 @@ class FoodsResponse {
     this.price,
     this.image,
   );
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'title': title,
+      'description': description,
+      'price': price,
+      'image': image,
+    };
+  }
 
   factory FoodsResponse.fromJson(Map<String, dynamic> json) {
     return FoodsResponse(

@@ -2,14 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:food_app_project/model/error_response.dart';
 import 'package:food_app_project/model/get_products/foods_response.dart';
 
 import '../../handle_api/handle_api.dart';
 import '../../model/check_out_order/checkout_order_request.dart';
 import '../../model/check_out_order/checkout_order_response.dart';
-import '../../model/get_order/get_order_response/order_detail_response_get.dart';
-import '../../model/remove_item_order/remove_item_order_request.dart';
-import '../../model/remove_item_order/remove_item_order_response.dart';
+import '../../model/save_basket/save_basket_request.dart';
+import '../../model/save_basket/save_basket_response.dart';
 import '../../model/sum_order/sum_order_request.dart';
 import '../../model/sum_order/sum_order_response.dart';
 import '../../util/global.dart';
@@ -19,26 +19,82 @@ import '../home/home_page.dart';
 
 class CartPage extends StatefulWidget {
   static String routeName = "/cart_screen";
-  final List<FoodsResponse>? dataOrder;
-  const CartPage({Key? key, required this.dataOrder}) : super(key: key);
+  final List<FoodsResponse> listDataOrder;
+  const CartPage({Key? key, required this.listDataOrder}) : super(key: key);
 
   @override
   State<CartPage> createState() => _CartPageState();
 }
 
 class _CartPageState extends State<CartPage> {
-  List<FoodsResponse>? listDataOrder;
   bool isLoading = false;
   @override
   void initState() {
-    listDataOrder = widget.dataOrder;
     super.initState();
   }
 
-  void handleBasketList() {
-    int quantity =0;
-
-
+  // call api save basket
+  Future<void> saveBasketAPI(SaveBasketRequest request) async {
+    setState(() {
+      IsShowDialog().showLoadingDialog(context);
+    });
+    SaveBasketResponse saveBasketResponse;
+    ErrorResponse errorResponse;
+    Map<String, dynamic>? body;
+    try {
+      body = await HttpHelper.invokeHttp(
+        Uri.parse("${Global.apiAddress}/api/basket/saveBasket"),
+        RequestType.post,
+        headers: null,
+        body: const JsonEncoder().convert(request.toBodyRequest()),
+      );
+      if (body == null) return;
+      if (body.containsKey('statusCode')) {
+        errorResponse = ErrorResponse.fromJson(body);
+        setState(() {
+          Navigator.of(context).pop();
+          Fluttertoast.showToast(
+            msg: errorResponse.errorMessage,
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 3,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+            fontSize: 16,
+          );
+        });
+      } else {
+        saveBasketResponse = SaveBasketResponse.fromJson(body);
+        setState(() {
+          Navigator.of(context).pop();
+          Fluttertoast.showToast(
+            msg: saveBasketResponse.message,
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 3,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+            fontSize: 16,
+          );
+        });
+      }
+    } catch (error) {
+      debugPrint("Fail to checkout order $error");
+      setState(() {
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: "Server Error",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+      });
+      rethrow;
+    }
+    return;
   }
 
   /// call api sum order
@@ -171,7 +227,8 @@ class _CartPageState extends State<CartPage> {
 
   void removeFoodToBasket(FoodsResponse food) {
     setState(() {
-      Global.basketList.remove(food);
+      widget.listDataOrder.remove(food);
+      Global.basketList = widget.listDataOrder;
     });
   }
 
@@ -180,16 +237,35 @@ class _CartPageState extends State<CartPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
-        leading: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          },
-          child: const Icon(Icons.arrow_back),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "Cart Details",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        title: const Text("Cart Details"),
+        actions: [
+          InkWell(
+            onTap: () {
+              SaveBasketRequest request =
+                  SaveBasketRequest(widget.listDataOrder);
+              saveBasketAPI(request);
+            },
+            child: const Padding(
+              padding: EdgeInsets.only(right: 20),
+              child: Text(
+                "Save Basket",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: bodyCart(),
     );
@@ -204,7 +280,7 @@ class _CartPageState extends State<CartPage> {
           Expanded(
             child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: listDataOrder!.length,
+                itemCount: widget.listDataOrder.length,
                 itemBuilder: (context, index) {
                   return Column(
                     children: [
@@ -224,6 +300,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget cartItem(index) {
+    var item = widget.listDataOrder[index];
     return Container(
       color: const Color(0xFFF5F5F5),
       padding: const EdgeInsets.all(16),
@@ -239,8 +316,7 @@ class _CartPageState extends State<CartPage> {
                 width: 80,
                 height: 80,
                 margin: const EdgeInsets.only(right: 10),
-                child: Image.network(listDataOrder![index].image!,
-                    fit: BoxFit.cover),
+                child: Image.network(item.image!, fit: BoxFit.cover),
               ),
               Container(
                   constraints: const BoxConstraints(maxWidth: 140),
@@ -248,7 +324,7 @@ class _CartPageState extends State<CartPage> {
                   alignment: Alignment.centerLeft,
                   margin: const EdgeInsets.only(right: 10),
                   child: Text(
-                    listDataOrder![index].title!,
+                    item.title!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   )),
@@ -258,27 +334,17 @@ class _CartPageState extends State<CartPage> {
                   alignment: Alignment.centerLeft,
                   margin: const EdgeInsets.only(right: 10),
                   child: Text(
-                    "${listDataOrder![index].price!}.000 VND",
+                    "${item.price!}.000 VND",
                     maxLines: 1,
                   )),
               GestureDetector(
                 onTap: () {
-                  removeFoodToBasket(listDataOrder![index]);
+                  removeFoodToBasket(item);
                 },
                 child: const Icon(Icons.delete_outline),
               )
             ],
           ),
-          const SizedBox(height: 10),
-          const Text(
-            "Số lượng: 2",
-            maxLines: 1,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
-          )
         ],
       ),
     );
