@@ -45,62 +45,6 @@ class _SplashPageState extends State<SplashPage> {
     });
   }
 
-  // Future<GetOrderResponse> getListCartOrders() async {
-  //   GetOrderResponse getOrderResponse;
-  //   Map<String, dynamic>? body;
-  //   try {
-  //     body = await HttpHelper.invokeHttp(
-  //         Uri.parse("http://14.225.204.248:7070/api/order/$userId"),
-  //         RequestType.get,
-  //         headers: null,
-  //         body: null);
-  //   } catch (error) {
-  //     debugPrint("Fail to list cart orders $error");
-  //     rethrow;
-  //   }
-  //   if (body == null) return GetOrderResponse.buildDefault();
-  //   //get data from api here
-  //   getOrderResponse = GetOrderResponse.fromJson(body);
-  //
-  //   List<OrderDetailResponseGet> orderDetailResponse = [];
-  //   if (getOrderResponse.dataGetOrderResponse!.responseOrderList != null) {
-  //     for (int i = 0;
-  //     i <
-  //         getOrderResponse.dataGetOrderResponse!.responseOrderList!
-  //             .orderDetailResponseGet!.length;
-  //     i++) {
-  //       OrderDetailResponseGet orderDetailResponseGet = getOrderResponse
-  //           .dataGetOrderResponse!
-  //           .responseOrderList!
-  //           .orderDetailResponseGet![i];
-  //       orderDetailResponse.add(OrderDetailResponseGet(
-  //         orderDetailResponseGet.id ??= "",
-  //         orderDetailResponseGet.title ??= "",
-  //         orderDetailResponseGet.description ??= "",
-  //         orderDetailResponseGet.image ??= "",
-  //         orderDetailResponseGet.price ??= 0,
-  //       ));
-  //     }
-  //     setState(() {
-  //       if (getOrderResponse.dataGetOrderResponse!.responseOrderList!
-  //           .orderDetailResponseGet !=
-  //           null &&
-  //           getOrderResponse.dataGetOrderResponse!.responseOrderList!
-  //               .orderDetailResponseGet!.isNotEmpty) {
-  //         listDataOrder = getOrderResponse
-  //             .dataGetOrderResponse!.responseOrderList!.orderDetailResponseGet!;
-  //       }
-  //       if (getOrderResponse
-  //           .dataGetOrderResponse!.responseOrderList!.orderId.isNotEmpty) {
-  //         Global.orderId =
-  //             getOrderResponse.dataGetOrderResponse!.responseOrderList!.orderId;
-  //       }
-  //     });
-  //   }
-  //
-  //   return getOrderResponse;
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

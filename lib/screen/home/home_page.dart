@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:food_app_project/model/get_products/foods_response.dart';
 
 import '../../handle_api/handle_api.dart';
-import '../../model/get_order/get_order_response/get_order_response.dart';
-import '../../model/get_order/get_order_response/order_detail_response_get.dart';
+import '../../model/get_basket_list/get_basket_response.dart';
+import '../../model/get_products/foods_response.dart';
 import '../../util/global.dart';
-import '../../util/share_preferences.dart';
 import '../cart/cart_page.dart';
 import 'account_fragment.dart';
 import 'appbar/menu_header.dart';
 import 'favorite_fragment.dart';
 import 'home_detail.dart';
-import 'notification_fragment.dart';
 
 class HomePage extends StatefulWidget {
   static String routeName = "/home_screen";
@@ -25,83 +22,41 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   var selectIndex = 0;
   bool favorites = true;
-  bool notification = true;
   bool homePage = true;
-  String userId = "";
-  List<FoodsResponse> basketList = [];
-
-  Future<void> getUserName() async {
-    userId = await ConfigSharedPreferences()
-        .getStringValue(SharedData.ID.toString(), defaultValue: "");
-    setState(() {
-      if (userId.isNotEmpty || userId != "") {
-        getListCartOrders();
-      }
-    });
-  }
+  List<FoodsResponse> basketListData = [];
 
   @override
   void initState() {
-    getUserName();
-    basketList = Global.basketList;
+    getBasketList();
     super.initState();
   }
 
   /// call api list cart orders
-  Future<GetOrderResponse> getListCartOrders() async {
-    GetOrderResponse getOrderResponse;
+  Future<void> getBasketList() async {
+    GetBasketResponse getBasketResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/order/$userId"),
-          RequestType.get,
-          headers: null,
-          body: null);
+        Uri.parse("${Global.apiAddress}/api/basket/getBasket"),
+        RequestType.get,
+        headers: null,
+        body: null,
+      );
+      if (body == null) return;
+      //get data from api here
+      getBasketResponse = GetBasketResponse.fromJson(body);
+
+      setState(() {
+        basketListData = getBasketResponse.basketList;
+        Global.basketList = basketListData;
+        Global.basketId = getBasketResponse.basketId ?? "";
+      });
     } catch (error) {
-      debugPrint("Fail to list cart orders $error");
+      debugPrint("Fail get basket list  $error");
       rethrow;
     }
-    if (body == null) return GetOrderResponse.buildDefault();
-    //get data from api here
-    getOrderResponse = GetOrderResponse.fromJson(body);
 
-    List<OrderDetailResponseGet> orderDetailResponse = [];
-    if (getOrderResponse.dataGetOrderResponse!.responseOrderList != null) {
-      for (int i = 0;
-          i <
-              getOrderResponse.dataGetOrderResponse!.responseOrderList!
-                  .orderDetailResponseGet!.length;
-          i++) {
-        OrderDetailResponseGet orderDetailResponseGet = getOrderResponse
-            .dataGetOrderResponse!
-            .responseOrderList!
-            .orderDetailResponseGet![i];
-        orderDetailResponse.add(OrderDetailResponseGet(
-          orderDetailResponseGet.id ??= "",
-          orderDetailResponseGet.title ??= "",
-          orderDetailResponseGet.description ??= "",
-          orderDetailResponseGet.image ??= "",
-          orderDetailResponseGet.price ??= 0,
-        ));
-      }
-      setState(() {
-        if (getOrderResponse.dataGetOrderResponse!.responseOrderList!
-                    .orderDetailResponseGet !=
-                null &&
-            getOrderResponse.dataGetOrderResponse!.responseOrderList!
-                .orderDetailResponseGet!.isNotEmpty) {
-          // listDataOrder = getOrderResponse
-          //     .dataGetOrderResponse!.responseOrderList!.orderDetailResponseGet!;
-        }
-        if (getOrderResponse
-            .dataGetOrderResponse!.responseOrderList!.orderId.isNotEmpty) {
-          Global.orderId =
-              getOrderResponse.dataGetOrderResponse!.responseOrderList!.orderId;
-        }
-      });
-    }
-
-    return getOrderResponse;
+    return;
   }
 
   @override
@@ -109,7 +64,6 @@ class _HomePageState extends State<HomePage> {
     List<Widget> screen = [
       const HomeDetail(),
       const FavoriteDetail(),
-      const NotificationDetail(),
       const AccountDetail()
     ];
 
@@ -135,26 +89,17 @@ class _HomePageState extends State<HomePage> {
                         fontWeight: FontWeight.bold,
                         color: Colors.white),
                   )
-                : notification
-                    ? const Text(
-                        "Notificaitons",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const MenuHeader(),
+                : const MenuHeader(),
         actions: homePage
             ? [
                 GestureDetector(
                   onTap: () {
-                    if (basketList.isNotEmpty) {
+                    if (basketListData.isNotEmpty) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => CartPage(
-                            listDataOrder: basketList,
+                            listDataOrder: basketListData,
                           ),
                         ),
                       );
@@ -183,7 +128,7 @@ class _HomePageState extends State<HomePage> {
                             color: Colors.white,
                           ),
                         ),
-                        if (basketList.isNotEmpty)
+                        if (basketListData.isNotEmpty)
                           Positioned(
                             right: 0,
                             child: Container(
@@ -197,9 +142,9 @@ class _HomePageState extends State<HomePage> {
                                 minHeight: 16,
                               ),
                               child: Text(
-                                basketList.length > 9
+                                basketListData.length > 9
                                     ? "9+"
-                                    : "${basketList.length}",
+                                    : "${basketListData.length}",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 10.5,
@@ -234,19 +179,12 @@ class _HomePageState extends State<HomePage> {
             } else {
               favorites = false;
             }
-            if (selectIndex == 2) {
-              notification = true;
-            } else {
-              notification = false;
-            }
           });
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
               icon: Icon(Icons.favorite), label: 'Favorite'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.notifications), label: 'Notifications'),
           BottomNavigationBarItem(
               icon: Icon(Icons.account_circle), label: 'Account'),
         ],

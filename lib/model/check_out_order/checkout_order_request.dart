@@ -1,11 +1,9 @@
 class CheckoutOrderRequest {
-  String orderId = "";
+  String basketId = "";
 
-
-  CheckoutOrderRequest(this.orderId);
+  CheckoutOrderRequest(this.basketId);
 
   Map<String, dynamic> toBodyRequest() => {
-    'orderId': orderId,
-
-  };
+        'basketId': basketId,
+      };
 }

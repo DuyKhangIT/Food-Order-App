@@ -1,4 +1,4 @@
-import '../../get_products/foods_response.dart';
+import '../get_products/foods_response.dart';
 
 class GetListFavoriteResponse {
   List<FoodsResponse>? favoriteFoods;

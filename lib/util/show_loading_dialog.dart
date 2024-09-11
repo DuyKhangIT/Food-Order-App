@@ -31,9 +31,27 @@ class IsShowDialog {
             child: Stack(
               children: [
                 Center(
-                  child: Text(
-                    "Total cost: $totalCost",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        const TextSpan(
+                          text: "Total Cost: ",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black,
+                            fontSize: 18,
+                          ),
+                        ),
+                        TextSpan(
+                          text: totalCost,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Positioned(
@@ -47,14 +65,16 @@ class IsShowDialog {
                       height: 40,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(10)),
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: const Text(
                         "Confirm",
                         style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

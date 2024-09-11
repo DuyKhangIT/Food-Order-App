@@ -1,15 +1,15 @@
 class CheckoutOrderResponse {
-  bool status = false;
+  String message = "";
 
   CheckoutOrderResponse(
-    this.status,
+    this.message,
   );
 
   CheckoutOrderResponse.buildDefault();
 
   factory CheckoutOrderResponse.fromJson(Map<String, dynamic> json) {
     return CheckoutOrderResponse(
-      json['status'],
+      json['message'],
     );
   }
 }

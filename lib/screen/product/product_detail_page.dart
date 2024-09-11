@@ -6,6 +6,8 @@ import 'package:food_app_project/model/add_or_remove_favorite/add_or_remove_favo
 import 'package:food_app_project/model/add_or_remove_favorite/add_or_remove_favorite_response.dart';
 
 import '../../handle_api/handle_api.dart';
+import '../../model/add_or_remove_item_basket/basket_request.dart';
+import '../../model/add_or_remove_item_basket/basket_response.dart';
 import '../../model/check_is_fav/check_is_fav_requuest.dart';
 import '../../model/check_is_fav/check_is_favorite_response.dart';
 import '../../model/error_response.dart';
@@ -184,17 +186,59 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return;
   }
 
-  void addToBasketList(FoodsResponse food) {
-    setState(() {
-      Global.basketList.add(food);
-    });
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      HomePage.routeName,
-      (Route<dynamic> route) => false,
-    ).then((value) {
-      setState(() {});
-    });
+  Future<void> addToBasket(BasketRequest request) async {
+    IsShowDialog().showLoadingDialog(context);
+    BasketResponse response;
+    ErrorResponse errorResponse;
+    Map<String, dynamic>? body;
+    try {
+      body = await HttpHelper.invokeHttp(
+        Uri.parse("${Global.apiAddress}/api/basket/addToBasket"),
+        RequestType.post,
+        headers: null,
+        body: const JsonEncoder().convert(request.toBodyRequest()),
+      );
+      if (body == null) return;
+      if (body.containsKey('statusCode')) {
+        errorResponse = ErrorResponse.fromJson(body);
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: errorResponse.errorMessage,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+      } else {
+        response = BasketResponse.fromJson(body);
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: response.message,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+      }
+    } catch (error) {
+      debugPrint("Fail to checkout order $error");
+      Navigator.of(context).pop();
+      Fluttertoast.showToast(
+        msg: "Server Error",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16,
+      );
+      rethrow;
+    }
+    return;
   }
 
   @override
@@ -251,10 +295,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Widget addToCart() {
     return InkWell(
-      onTap: () {
+      onTap: () async {
         if (Global.isAvailableToClick()) {
           if (widget.dataFood != null) {
-            addToBasketList(widget.dataFood!);
+            BasketRequest request = BasketRequest(widget.dataFood!.id ?? '');
+            await addToBasket(request);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              HomePage.routeName,
+                  (Route<dynamic> route) => false,
+            ).then((value) {
+              setState(() {});
+            });
           }
         }
       },

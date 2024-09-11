@@ -6,12 +6,10 @@ import 'package:food_app_project/model/error_response.dart';
 import 'package:food_app_project/model/get_products/foods_response.dart';
 
 import '../../handle_api/handle_api.dart';
+import '../../model/add_or_remove_item_basket/basket_request.dart';
+import '../../model/add_or_remove_item_basket/basket_response.dart';
 import '../../model/check_out_order/checkout_order_request.dart';
 import '../../model/check_out_order/checkout_order_response.dart';
-import '../../model/save_basket/save_basket_request.dart';
-import '../../model/save_basket/save_basket_response.dart';
-import '../../model/sum_order/sum_order_request.dart';
-import '../../model/sum_order/sum_order_response.dart';
 import '../../util/global.dart';
 
 import '../../util/show_loading_dialog.dart';
@@ -27,23 +25,22 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  bool isLoading = false;
+  List<FoodsResponse> basketList = [];
   @override
   void initState() {
+    basketList = widget.listDataOrder;
     super.initState();
   }
 
   // call api save basket
-  Future<void> saveBasketAPI(SaveBasketRequest request) async {
-    setState(() {
-      IsShowDialog().showLoadingDialog(context);
-    });
-    SaveBasketResponse saveBasketResponse;
+  Future<void> removeFromBasket(BasketRequest request) async {
+    IsShowDialog().showLoadingDialog(context);
+    BasketResponse response;
     ErrorResponse errorResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-        Uri.parse("${Global.apiAddress}/api/basket/saveBasket"),
+        Uri.parse("${Global.apiAddress}/api/basket/removeFromBasket"),
         RequestType.post,
         headers: null,
         body: const JsonEncoder().convert(request.toBodyRequest()),
@@ -51,185 +48,115 @@ class _CartPageState extends State<CartPage> {
       if (body == null) return;
       if (body.containsKey('statusCode')) {
         errorResponse = ErrorResponse.fromJson(body);
-        setState(() {
-          Navigator.of(context).pop();
-          Fluttertoast.showToast(
-            msg: errorResponse.errorMessage,
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.green,
-            textColor: Colors.white,
-            fontSize: 16,
-          );
-        });
-      } else {
-        saveBasketResponse = SaveBasketResponse.fromJson(body);
-        setState(() {
-          Navigator.of(context).pop();
-          Fluttertoast.showToast(
-            msg: saveBasketResponse.message,
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.green,
-            textColor: Colors.white,
-            fontSize: 16,
-          );
-        });
-      }
-    } catch (error) {
-      debugPrint("Fail to checkout order $error");
-      setState(() {
         Navigator.of(context).pop();
         Fluttertoast.showToast(
-          msg: "Server Error",
+          msg: errorResponse.errorMessage,
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
           timeInSecForIosWeb: 3,
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.green,
           textColor: Colors.white,
           fontSize: 16,
         );
-      });
+      } else {
+        response = BasketResponse.fromJson(body);
+        setState(() {
+          basketList = response.basketList;
+          Global.basketList = basketList;
+        });
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: response.message,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+      }
+    } catch (error) {
+      debugPrint("Fail to checkout order $error");
+      Navigator.of(context).pop();
+      Fluttertoast.showToast(
+        msg: "Server Error",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16,
+      );
       rethrow;
     }
     return;
   }
 
   /// call api sum order
-  Future<SumOrderResponse> sumOrderApi(SumOrderRequest sumOrderRequest) async {
-    setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
+  void sumOrderApi() async {
+    var total = 0;
+    for (var item in basketList) {
+      if (item.price != null && item.price != 0) {
+        total += item.price!;
       }
-    });
-    SumOrderResponse sumOrderResponse;
-    Map<String, dynamic>? body;
-    try {
-      body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/order/sum"),
-          RequestType.post,
-          headers: null,
-          body: const JsonEncoder().convert(sumOrderRequest.toBodyRequest()));
-    } catch (error) {
-      debugPrint("Fail to sum order $error");
-      rethrow;
     }
-    if (body == null) return SumOrderResponse.buildDefault();
-    sumOrderResponse = SumOrderResponse.fromJson(body);
-    if (sumOrderResponse.status == false) {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
-        Fluttertoast.showToast(
-            msg: "Sum order fail!",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16);
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-
-          IsShowDialog().showDialogContent(context,
-              "${sumOrderResponse.dataSumOrderResponse!.total}.000 VND");
-        }
-      });
-    }
-
-    return sumOrderResponse;
+    IsShowDialog().showDialogContent(context, "$total.000 VND");
   }
 
   /// call api checkout  order
-  Future<CheckoutOrderResponse> checkoutOrderApi(
-      CheckoutOrderRequest checkoutOrderRequest) async {
-    setState(() {
-      isLoading = true;
-      if (isLoading) {
-        IsShowDialog().showLoadingDialog(context);
-      } else {
-        Navigator.of(context).pop();
-      }
-    });
+  Future<void> checkoutOrderApi(
+    CheckoutOrderRequest checkoutOrderRequest,
+  ) async {
+    IsShowDialog().showLoadingDialog(context);
     CheckoutOrderResponse checkoutOrderResponse;
+    ErrorResponse errorResponse;
     Map<String, dynamic>? body;
     try {
       body = await HttpHelper.invokeHttp(
-          Uri.parse("http://14.225.204.248:7070/api/order/checkout"),
-          RequestType.post,
-          headers: null,
-          body: const JsonEncoder()
-              .convert(checkoutOrderRequest.toBodyRequest()));
+        Uri.parse("${Global.apiAddress}/api/basket/checkoutBasket"),
+        RequestType.post,
+        headers: null,
+        body: const JsonEncoder().convert(checkoutOrderRequest.toBodyRequest()),
+      );
+      if (body == null) return;
+
+      if (body.containsKey('statusCode')) {
+        errorResponse = ErrorResponse.fromJson(body);
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: errorResponse.errorMessage,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+      } else {
+        checkoutOrderResponse = CheckoutOrderResponse.fromJson(body);
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: checkoutOrderResponse.message,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16,
+        );
+        Global.basketId = "";
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (Route<dynamic> route) => false,
+        );
+      }
     } catch (error) {
       debugPrint("Fail to checkout order $error");
       rethrow;
     }
-    if (body == null) return CheckoutOrderResponse.buildDefault();
-    checkoutOrderResponse = CheckoutOrderResponse.fromJson(body);
-    if (checkoutOrderResponse.status == false) {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-        }
-        Fluttertoast.showToast(
-            msg: "Checkout order fail!",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16);
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-        if (isLoading) {
-          IsShowDialog().showLoadingDialog(context);
-        } else {
-          Navigator.of(context).pop();
-          Fluttertoast.showToast(
-              msg: "Checkout order successfully",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 3,
-              backgroundColor: Colors.green,
-              textColor: Colors.white,
-              fontSize: 16);
-          Global.orderId = "";
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
-        }
-      });
-    }
 
-    return checkoutOrderResponse;
-  }
-
-  void removeFoodToBasket(FoodsResponse food) {
-    setState(() {
-      widget.listDataOrder.remove(food);
-      Global.basketList = widget.listDataOrder;
-    });
+    return;
   }
 
   @override
@@ -238,6 +165,21 @@ class _CartPageState extends State<CartPage> {
       appBar: AppBar(
         backgroundColor: Colors.green,
         iconTheme: const IconThemeData(color: Colors.white),
+        leading: InkWell(
+          onTap: () {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              HomePage.routeName,
+              (Route<dynamic> route) => false,
+            ).then((value) {
+              setState(() {});
+            });
+          },
+          child: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+        ),
         title: const Text(
           "Cart Details",
           style: TextStyle(
@@ -246,61 +188,43 @@ class _CartPageState extends State<CartPage> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        actions: [
-          InkWell(
-            onTap: () {
-              SaveBasketRequest request =
-                  SaveBasketRequest(widget.listDataOrder);
-              saveBasketAPI(request);
-            },
-            child: const Padding(
-              padding: EdgeInsets.only(right: 20),
-              child: Text(
-                "Save Basket",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: bodyCart(),
+      bottomNavigationBar: checkOutAndSumCart(),
     );
   }
 
   Widget bodyCart() {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.listDataOrder.length,
-                itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () {},
-                        child: cartItem(index),
-                      ),
-                      const Divider()
-                    ],
-                  );
-                }),
-          ),
-          checkOutAndSumCart()
-        ],
-      ),
-    );
+    return basketList.isNotEmpty
+        ? ListView.builder(
+            shrinkWrap: true,
+            itemCount: basketList.length,
+            itemBuilder: (context, index) {
+              return Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {},
+                    child: cartItem(index),
+                  ),
+                  const Divider()
+                ],
+              );
+            },
+          )
+        : const Center(
+            child: Text(
+              'Giỏ hàng trống',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
   }
 
   Widget cartItem(index) {
-    var item = widget.listDataOrder[index];
+    var item = basketList[index];
     return Container(
       color: const Color(0xFFF5F5F5),
       padding: const EdgeInsets.all(16),
@@ -338,8 +262,11 @@ class _CartPageState extends State<CartPage> {
                     maxLines: 1,
                   )),
               GestureDetector(
-                onTap: () {
-                  removeFoodToBasket(item);
+                onTap: () async {
+                  if (item.id != null && item.id!.isNotEmpty) {
+                    BasketRequest request = BasketRequest(item.id!);
+                    await removeFromBasket(request);
+                  }
                 },
                 child: const Icon(Icons.delete_outline),
               )
@@ -357,11 +284,7 @@ class _CartPageState extends State<CartPage> {
         GestureDetector(
           onTap: () {
             if (Global.isAvailableToClick()) {
-              if (Global.orderId.isNotEmpty) {
-                SumOrderRequest sumOrderRequest =
-                    SumOrderRequest(Global.orderId);
-                sumOrderApi(sumOrderRequest);
-              }
+              sumOrderApi();
             }
           },
           child: Container(
@@ -379,9 +302,10 @@ class _CartPageState extends State<CartPage> {
         GestureDetector(
           onTap: () {
             if (Global.isAvailableToClick()) {
-              if (Global.orderId.isNotEmpty) {
+              if (Global.basketId.isNotEmpty) {
+                print('Basket ID: ${Global.basketId}');
                 CheckoutOrderRequest checkoutOrderRequest =
-                    CheckoutOrderRequest(Global.orderId);
+                    CheckoutOrderRequest(Global.basketId);
                 checkoutOrderApi(checkoutOrderRequest);
               }
             }

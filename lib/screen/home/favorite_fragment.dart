@@ -4,9 +4,8 @@ import 'package:food_app_project/model/error_response.dart';
 import 'package:food_app_project/model/get_products/foods_response.dart';
 
 import '../../handle_api/handle_api.dart';
-import '../../model/get_list_favorite/get_list_favorite_response/get_list_favorite_response.dart';
+import '../../model/get_list_favorite/get_list_favorite_response.dart';
 import '../../util/global.dart';
-import '../../util/show_loading_dialog.dart';
 
 class FavoriteDetail extends StatefulWidget {
   const FavoriteDetail({Key? key}) : super(key: key);
