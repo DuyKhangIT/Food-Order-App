@@ -4,4 +4,5 @@ class ImageAssets {
   static const String icTwitter = 'assets/img/ic_twitter.png';
   static const String icAddQuantity = 'assets/img/ic_add_quantity.png';
   static const String icMinusQuantity = 'assets/img/ic_minus.png';
+  static const String icHeart = 'assets/img/ic_heart.png';
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:food_app_project/assets/images.dart';
 import 'package:food_app_project/model/error_response.dart';
 import 'package:food_app_project/model/get_products/foods_response.dart';
 
@@ -33,7 +34,6 @@ class _FavoriteDetailState extends State<FavoriteDetail> {
     ErrorResponse errorResponse;
     Map<String, dynamic>? body;
     try {
-
       body = await HttpHelper.invokeHttp(
         Uri.parse("${Global.apiAddress}/api/favorite/getFavoriteFoods"),
         RequestType.get,
@@ -58,9 +58,9 @@ class _FavoriteDetailState extends State<FavoriteDetail> {
         //get data from api here
         getListFavoriteResponse = GetListFavoriteResponse.fromJson(body);
 
-       setState(() {
-         listFav = getListFavoriteResponse.favoriteFoods;
-       });
+        setState(() {
+          listFav = getListFavoriteResponse.favoriteFoods;
+        });
 
         print('ListFV $listFav');
       }
@@ -97,8 +97,9 @@ class _FavoriteDetailState extends State<FavoriteDetail> {
 
   Widget favoritesItemList(BuildContext context, index) {
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(10),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
               width: 100,
@@ -110,36 +111,24 @@ class _FavoriteDetailState extends State<FavoriteDetail> {
           const SizedBox(
             width: 10,
           ),
-          Container(
-            width: MediaQuery.of(context).size.width / 1.5,
-            constraints: const BoxConstraints(maxHeight: 100),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                    width: MediaQuery.of(context).size.width / 1.5,
-                    height: 20,
-                    child: Text(
-                      listFav![index].title!,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    )),
-
-                ///api
-                Container(
-                    width: MediaQuery.of(context).size.width / 1.5,
-                    constraints: const BoxConstraints(maxHeight: 80),
-                    child: Text(
-                      listFav![index].description!,
-
-                      ///api
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                    ))
+                Text(
+                  listFav![index].title!,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  listFav![index].description!,
+                  maxLines: 5,
+                  overflow: TextOverflow.ellipsis,
+                )
               ],
             ),
-          )
+          ),
         ],
       ),
     );
